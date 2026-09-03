@@ -9,6 +9,7 @@ class HorizontalResourceSection extends StatelessWidget {
   final IconData? icon;
   final List<AcademicResourceModel> items;
   final VoidCallback? onSeeAll;
+  final bool isCompact;
 
   const HorizontalResourceSection({
     super.key,
@@ -16,6 +17,7 @@ class HorizontalResourceSection extends StatelessWidget {
     this.icon,
     required this.items,
     this.onSeeAll,
+    this.isCompact = false,
   });
 
   @override
@@ -28,11 +30,12 @@ class HorizontalResourceSection extends StatelessWidget {
         SectionHeader(
           title: title,
           icon: icon,
-          onActionPressed: onSeeAll,
+          actionTitle: 'See all',
+          onActionPressed: onSeeAll ?? () {},
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         SizedBox(
-          height: 195,
+          height: isCompact ? 146 : 198,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -41,6 +44,7 @@ class HorizontalResourceSection extends StatelessWidget {
               final item = items[index];
               return HorizontalResourceCard(
                 resource: item,
+                isCompact: isCompact,
                 onTap: () {
                   Navigator.pushNamed(
                     context,

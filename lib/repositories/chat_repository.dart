@@ -1,11 +1,12 @@
 import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
+import '../services/firestore_chat_service.dart';
 
 class ChatRepository {
   final ChatService _chatService;
 
   ChatRepository({ChatService? chatService})
-      : _chatService = chatService ?? MockChatService();
+      : _chatService = chatService ?? FirestoreChatService();
 
   Future<List<ChatConversationModel>> getConversations() =>
       _chatService.getConversations();
@@ -19,4 +20,10 @@ class ChatRepository {
     double? priceOffer,
   }) =>
       _chatService.sendMessage(conversationId, text, priceOffer: priceOffer);
+
+  Future<bool> blockUser(String conversationId, String userId) =>
+      _chatService.blockUser(conversationId, userId);
+
+  Future<bool> reportUser(String conversationId, String userId, String reason) =>
+      _chatService.reportUser(conversationId, userId, reason);
 }

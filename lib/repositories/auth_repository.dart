@@ -1,12 +1,59 @@
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_auth_service.dart';
 
 class AuthRepository {
   final AuthService _authService;
 
-  AuthRepository({AuthService? authService}) : _authService = authService ?? MockAuthService();
+  AuthRepository({AuthService? authService}) : _authService = authService ?? FirestoreAuthService();
 
   Future<UserModel?> getCurrentUser() => _authService.getCurrentUser();
-  Future<UserModel> verifyStudentEmail(String eduEmail, String university) => _authService.verifyStudentEmail(eduEmail, university);
+
+  Future<UserModel> register({
+    required String fullName,
+    required String email,
+    required String university,
+    required String department,
+    required String academicYear,
+    required String password,
+  }) =>
+      _authService.register(
+        fullName: fullName,
+        email: email,
+        university: university,
+        department: department,
+        academicYear: academicYear,
+        password: password,
+      );
+
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) =>
+      _authService.login(email: email, password: password);
+
+  Future<bool> sendForgotPasswordEmail(String email) =>
+      _authService.sendForgotPasswordEmail(email);
+
+  Future<bool> sendCollegeEmailOtp(String email) =>
+      _authService.sendCollegeEmailOtp(email);
+
+  Future<UserModel> verifyCollegeEmailOtp({
+    required String email,
+    required String otpCode,
+  }) =>
+      _authService.verifyCollegeEmailOtp(email: email, otpCode: otpCode);
+
+  Future<UserModel> submitCollegeIdVerification({
+    required String userId,
+    required String studentIdNumber,
+    required String documentFileName,
+  }) =>
+      _authService.submitCollegeIdVerification(
+        userId: userId,
+        studentIdNumber: studentIdNumber,
+        documentFileName: documentFileName,
+      );
+
   Future<void> logout() => _authService.logout();
 }

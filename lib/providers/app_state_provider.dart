@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
+import 'analytics_provider.dart';
 import 'auth_provider.dart';
-import 'resource_provider.dart';
 import 'chat_provider.dart';
+import 'digital_product_provider.dart';
+import 'offer_provider.dart';
+import 'resource_provider.dart';
 import 'theme_provider.dart';
+import 'transaction_provider.dart';
+import 'trust_provider.dart';
 
 class AppStateProvider extends InheritedWidget {
   final AuthProvider authProvider;
   final ResourceProvider resourceProvider;
   final ChatProvider chatProvider;
+  final TransactionProvider transactionProvider;
+  final OfferProvider offerProvider;
+  final DigitalProductProvider digitalProductProvider;
+  final TrustProvider trustProvider;
+  final AnalyticsProvider analyticsProvider;
   final ThemeProvider themeProvider;
 
   const AppStateProvider({
@@ -15,6 +25,11 @@ class AppStateProvider extends InheritedWidget {
     required this.authProvider,
     required this.resourceProvider,
     required this.chatProvider,
+    required this.transactionProvider,
+    required this.offerProvider,
+    required this.digitalProductProvider,
+    required this.trustProvider,
+    required this.analyticsProvider,
     required this.themeProvider,
     required super.child,
   });
@@ -35,6 +50,11 @@ class AppStateProvider extends InheritedWidget {
     return authProvider != oldWidget.authProvider ||
         resourceProvider != oldWidget.resourceProvider ||
         chatProvider != oldWidget.chatProvider ||
+        transactionProvider != oldWidget.transactionProvider ||
+        offerProvider != oldWidget.offerProvider ||
+        digitalProductProvider != oldWidget.digitalProductProvider ||
+        trustProvider != oldWidget.trustProvider ||
+        analyticsProvider != oldWidget.analyticsProvider ||
         themeProvider != oldWidget.themeProvider;
   }
 }

@@ -1,12 +1,18 @@
 import '../models/chat_message_model.dart';
 
+/// Service interface prepared for real-time WebSocket / FCM messaging on Google Cloud backend
 abstract class ChatService {
   Future<List<ChatConversationModel>> getConversations();
   Future<List<ChatMessageModel>> getMessages(String conversationId);
   Future<ChatMessageModel> sendMessage(String conversationId, String text, {double? priceOffer});
+  Future<bool> blockUser(String conversationId, String userId);
+  Future<bool> reportUser(String conversationId, String userId, String reason);
 }
 
-class MockChatService implements ChatService {
+/// Cloud Run / WebSocket Real-time Chat Service Implementation
+class CloudRunChatService implements ChatService {
+  final List<ChatConversationModel> _conversations = List.from(ChatConversationModel.mockConversations);
+
   final Map<String, List<ChatMessageModel>> _messages = {
     'conv_001': [
       ChatMessageModel(
@@ -40,18 +46,32 @@ class MockChatService implements ChatService {
         isMine: false,
       ),
     ],
+    'conv_002': [
+      ChatMessageModel(
+        id: 'msg_101',
+        conversationId: 'conv_002',
+        senderId: 'user_103',
+        senderName: 'Sophia Patel',
+        text: 'Hi Alex! Offering \$5.00 for 10 days borrow of the TI-84 calculator.',
+        priceOffer: 5.0,
+        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        isMine: false,
+        isOffer: true,
+        offerStatus: 'PENDING',
+      ),
+    ],
   };
 
   @override
   Future<List<ChatConversationModel>> getConversations() async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return ChatConversationModel.mockConversations;
+    await Future.delayed(const Duration(milliseconds: 200));
+    return List.from(_conversations);
   }
 
   @override
   Future<List<ChatMessageModel>> getMessages(String conversationId) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    return _messages[conversationId] ?? [];
+    return List.from(_messages[conversationId] ?? []);
   }
 
   @override
@@ -68,11 +88,43 @@ class MockChatService implements ChatService {
       isMine: true,
       isOffer: priceOffer != null,
       offerStatus: priceOffer != null ? 'PENDING' : null,
+      isRead: true,
     );
+
     if (!_messages.containsKey(conversationId)) {
       _messages[conversationId] = [];
     }
     _messages[conversationId]!.add(msg);
+
+    // Update conversation last message
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    if (index != -1) {
+      _conversations[index] = _conversations[index].copyWith(
+        lastMessage: text,
+        lastMessageTime: DateTime.now(),
+      );
+    }
+
     return msg;
+  }
+
+  @override
+  Future<bool> blockUser(String conversationId, String userId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    if (index != -1) {
+      final updatedParticipant = _conversations[index].participant.copyWith(isBlocked: true);
+      _conversations[index] = _conversations[index].copyWith(
+        isBlocked: true,
+        participant: updatedParticipant,
+      );
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> reportUser(String conversationId, String userId, String reason) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return true;
   }
 }

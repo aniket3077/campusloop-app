@@ -4,18 +4,20 @@ class AppConstants {
   static const String appTagline = 'Circular Campus Resource Sharing';
   static const String appVersion = '1.0.0';
 
-  // Resource Categories
+  // Specific Resource Categories required by CampusLoop Home Dashboard
   static const List<String> categories = [
-    'All Categories',
-    'Textbooks & Reading',
-    'Lab Equipment & Kits',
-    'Class Notes & Summaries',
-    'Electronics & Calculators',
-    'Drafting & Art Supplies',
-    'Dorm & Study Essentials',
+    'All',
+    'Books',
+    'Calculators',
+    'Drawing Kits',
+    'Electronics',
+    'Lab Components',
+    'Project Materials',
+    'Tools',
+    'Other',
   ];
 
-  // Resource Types
+  // Quick Action Types
   static const String typeBuy = 'BUY';
   static const String typeSell = 'SELL';
   static const String typeBorrow = 'BORROW';
@@ -25,6 +27,7 @@ class AppConstants {
 
   static const List<String> resourceTypes = [
     'All Types',
+    typeBuy,
     typeSell,
     typeBorrow,
     typeExchange,
@@ -40,6 +43,18 @@ class AppConstants {
     'Heavily Used / Annotated',
   ];
 
+  // Specific Campus Courses for Academic Resource Match
+  static const List<String> courses = [
+    'All Courses',
+    'ME 101',
+    'MATH 51',
+    'ARCH 101',
+    'EE 108',
+    'CHEM 31A',
+    'CS 106B',
+    'PHYS 41',
+  ];
+
   // Sample Universities
   static const List<String> universities = [
     'Stanford University',
@@ -48,6 +63,29 @@ class AppConstants {
     'Harvard University',
     'UT Austin',
     'University of Washington',
+  ];
+
+  // Academic Years
+  static const List<String> academicYears = [
+    'Freshman (1st Year)',
+    'Sophomore (2nd Year)',
+    'Junior (3rd Year)',
+    'Senior (4th Year)',
+    'Graduate / Master\'s',
+    'PhD / Doctorate',
+  ];
+
+  // Common Academic Departments
+  static const List<String> departments = [
+    'Computer Science & Engineering',
+    'Electrical & Computer Engineering',
+    'Mechanical Engineering',
+    'Biological Sciences & Chemistry',
+    'Business & Economics',
+    'Physics & Mathematics',
+    'Medicine & Health Sciences',
+    'Humanities & Social Sciences',
+    'Architecture & Design',
   ];
 
   // Sample Pickup Locations

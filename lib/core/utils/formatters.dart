@@ -5,7 +5,8 @@ import '../constants/app_constants.dart';
 class Formatters {
   static String formatCurrency(double amount) {
     if (amount == 0) return 'Free';
-    return '\$${amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2)}';
+    final isInt = amount.truncateToDouble() == amount;
+    return '₹${isInt ? amount.toInt() : amount.toStringAsFixed(2)}';
   }
 
   static String formatRelativeTime(DateTime dateTime) {

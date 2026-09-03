@@ -31,9 +31,10 @@ class SectionHeader extends StatelessWidget {
               ],
               Text(
                 title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
                 ),
               ),
             ],
@@ -43,9 +44,10 @@ class SectionHeader extends StatelessWidget {
               onTap: onActionPressed,
               child: Text(
                 actionTitle!,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                style: const TextStyle(
+                  color: Color(0xFF5B42F3),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ),

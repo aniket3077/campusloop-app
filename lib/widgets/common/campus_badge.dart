@@ -16,33 +16,35 @@ class CampusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = isVerified ? AppColors.verifiedBadge : AppColors.badgeBorrow;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isCompact ? 6.0 : 10.0,
         vertical: isCompact ? 2.0 : 4.0,
       ),
       decoration: BoxDecoration(
-        color: AppColors.verifiedBadge.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.verifiedBadge.withValues(alpha: 0.3),
+          color: color.withValues(alpha: 0.3),
           width: 0.8,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.verified,
+          Icon(
+            isVerified ? Icons.verified : Icons.pending,
             size: 14,
-            color: AppColors.verifiedBadge,
+            color: color,
           ),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
-              isVerified ? '$university Student' : university,
+              isVerified ? '$university Verified Student' : '$university (Pending)',
               style: theme.textTheme.labelMedium?.copyWith(
-                color: AppColors.verifiedBadge,
+                color: color,
                 fontWeight: FontWeight.w600,
                 fontSize: isCompact ? 11 : 12,
               ),

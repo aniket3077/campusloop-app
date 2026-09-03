@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/utils/validators.dart';
+import '../../models/user_model.dart';
+import '../../providers/app_state_provider.dart';
+import '../../widgets/common/campusloop_logo_widget.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
-import '../../providers/app_state_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,24 +17,38 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  String _selectedUniversity = 'Stanford University';
+  final _emailController = TextEditingController(text: 'arivera@stanford.edu');
+  final _passwordController = TextEditingController(text: 'password123');
 
   @override
   void dispose() {
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _onContinue() async {
+  void _onLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       final authProvider = AppStateProvider.of(context).authProvider;
-      final success = await authProvider.verifyAndLogin(
-        _emailController.text,
-        _selectedUniversity,
+      final success = await authProvider.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
+
       if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.mainShell);
+        final user = authProvider.user;
+        if (user != null && user.verificationStatus == StudentVerificationStatus.verified) {
+          Navigator.pushReplacementNamed(context, AppRoutes.mainShell);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.collegeVerification);
+        }
+      } else if (mounted && authProvider.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -42,68 +59,86 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = AppStateProvider.of(context).authProvider;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verified Student Access')),
+      appBar: AppBar(
+        title: const Text('CampusLoop Student Login'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'CampusLoop requires a verified college email (.edu) to maintain a trusted student community.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
+              // CampusLoop Official Logo Graphic Header
+              const Center(
+                child: CampusLoopLogoWidget(
+                  size: 160,
+                  showText: true,
+                  showActionTagline: true,
                 ),
               ),
-              const SizedBox(height: 28),
-              Text(
-                'Select University',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                value: _selectedUniversity,
-                decoration: const InputDecoration(),
-                items: const [
-                  DropdownMenuItem(value: 'Stanford University', child: Text('Stanford University')),
-                  DropdownMenuItem(value: 'MIT', child: Text('MIT')),
-                  DropdownMenuItem(value: 'UC Berkeley', child: Text('UC Berkeley')),
-                  DropdownMenuItem(value: 'Harvard University', child: Text('Harvard University')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedUniversity = val);
-                },
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
               CustomTextField(
                 controller: _emailController,
-                label: 'Student Email Address',
+                label: 'College Email (.edu)',
                 hint: 'your.name@university.edu',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.validateCollegeEmail,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              CustomTextField(
+                controller: _passwordController,
+                label: 'Password',
+                hint: '••••••••',
+                prefixIcon: Icons.lock_outline_rounded,
+                obscureText: true,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Please enter password' : null,
+              ),
+              const SizedBox(height: 8),
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                  },
+                  child: const Text('Forgot Password?'),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               CustomButton(
-                text: 'Verify Student Identity',
-                onPressed: _onContinue,
+                text: 'Sign In',
+                onPressed: _onLogin,
                 isLoading: authProvider.isLoading,
-                icon: Icons.verified_user_rounded,
+                icon: Icons.login_rounded,
+              ),
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'New to ${AppConstants.appName}? ',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.register);
+                    },
+                    child: Text(
+                      'Register Now',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

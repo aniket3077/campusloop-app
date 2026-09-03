@@ -6,7 +6,7 @@ class ChatProvider extends ChangeNotifier {
   final ChatRepository _repository;
 
   List<ChatConversationModel> _conversations = [];
-  Map<String, List<ChatMessageModel>> _conversationMessages = {};
+  final Map<String, List<ChatMessageModel>> _conversationMessages = {};
   bool _isLoading = false;
 
   ChatProvider({ChatRepository? repository})
@@ -32,6 +32,14 @@ class ChatProvider extends ChangeNotifier {
     return _conversationMessages[conversationId] ?? [];
   }
 
+  ChatConversationModel? getConversationById(String conversationId) {
+    try {
+      return _conversations.firstWhere((c) => c.id == conversationId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> loadMessages(String conversationId) async {
     try {
       final msgs = await _repository.getMessages(conversationId);
@@ -47,7 +55,25 @@ class ChatProvider extends ChangeNotifier {
         _conversationMessages[conversationId] = [];
       }
       _conversationMessages[conversationId]!.add(msg);
-      notifyListeners();
+      await loadConversations();
     } catch (_) {}
+  }
+
+  Future<bool> blockUser(String conversationId, String userId) async {
+    try {
+      final res = await _repository.blockUser(conversationId, userId);
+      await loadConversations();
+      return res;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> reportUser(String conversationId, String userId, String reason) async {
+    try {
+      return await _repository.reportUser(conversationId, userId, reason);
+    } catch (_) {
+      return false;
+    }
   }
 }

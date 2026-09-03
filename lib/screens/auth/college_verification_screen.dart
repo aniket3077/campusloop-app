@@ -18,7 +18,7 @@ class _CollegeVerificationScreenState extends State<CollegeVerificationScreen> {
   final _studentIdNumberController = TextEditingController();
 
   int _currentStep = 0;
-  String _selectedFileName = 'student_id_card_scan.jpg';
+  final String _selectedFileName = 'student_id_card_scan.jpg';
   bool _isFileUploaded = false;
 
   @override

@@ -28,6 +28,7 @@ class FilterBottomSheet extends StatefulWidget {
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late String _selectedType;
+  late String _selectedCourse;
   late RangeValues _priceRange;
   late String _selectedCondition;
   late String _selectedLocation;
@@ -37,6 +38,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void initState() {
     super.initState();
     _selectedType = widget.resourceProvider.selectedType;
+    _selectedCourse = widget.resourceProvider.selectedCourse;
     _priceRange = widget.resourceProvider.priceRange;
     _selectedCondition = widget.resourceProvider.selectedCondition;
     _selectedLocation = widget.resourceProvider.selectedLocation;
@@ -44,6 +46,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _applyFilters() {
+    widget.resourceProvider.setCourse(_selectedCourse);
     widget.resourceProvider.applyFilterOptions(
       resourceType: _selectedType,
       priceRange: _priceRange,
@@ -57,6 +60,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void _resetFilters() {
     setState(() {
       _selectedType = 'All Types';
+      _selectedCourse = 'All Courses';
       _priceRange = const RangeValues(0, 150);
       _selectedCondition = 'All';
       _selectedLocation = 'All Locations';
@@ -127,6 +131,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   _buildTypeChip(AppConstants.typeDonate),
                   _buildTypeChip(AppConstants.typeRequest),
                 ],
+              ),
+              const SizedBox(height: 20),
+
+              // Filter: Academic Course
+              Text(
+                'Academic Course',
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: AppConstants.courses.map((course) {
+                  final isSelected = _selectedCourse == course;
+                  return ChoiceChip(
+                    label: Text(course),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() => _selectedCourse = selected ? course : 'All Courses');
+                    },
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 20),
 
