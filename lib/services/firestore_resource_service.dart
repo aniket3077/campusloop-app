@@ -67,7 +67,7 @@ class FirestoreResourceService implements ResourceService {
         query = query.where('resourceType', isEqualTo: resourceType.toUpperCase());
       }
 
-      final snapshot = await query.get();
+      final snapshot = await query.get().timeout(const Duration(seconds: 4));
 
       // If Firestore is empty, fallback to mock data
       if (snapshot.docs.isEmpty) {

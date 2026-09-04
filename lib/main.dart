@@ -20,12 +20,19 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase and Google Cloud Firestore
-  await FirebaseManager.initialize();
+  try {
+    await FirebaseManager.initialize().timeout(const Duration(seconds: 4));
+  } catch (e) {
+    debugPrint('[main] Firebase initialization notice: $e');
+  }
 
-  // Seed sample database collections if empty
-  await FirestoreSeeder.seedIfEmpty();
-
+  // 1. Launch UI immediately so the user never sees a black screen
   runApp(const CampusLoopApp());
+
+  // 2. Seed sample database collections in background without blocking app startup
+  FirestoreSeeder.seedIfEmpty().catchError((e) {
+    debugPrint('[FirestoreSeeder] Background seeding notice: $e');
+  });
 }
 
 class CampusLoopApp extends StatefulWidget {

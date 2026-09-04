@@ -208,6 +208,37 @@ class FirestoreAuthService implements AuthService {
   }
 
   @override
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? name,
+    String? department,
+    String? academicYear,
+    String? avatarUrl,
+  }) async {
+    final col = _usersCol;
+    if (col != null && userId.isNotEmpty) {
+      try {
+        final updateData = <String, dynamic>{};
+        if (name != null) updateData['name'] = name;
+        if (department != null) updateData['department'] = department;
+        if (academicYear != null) updateData['academicYear'] = academicYear;
+        if (avatarUrl != null) updateData['avatarUrl'] = avatarUrl;
+        await col.doc(userId).set(updateData, SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('[FirestoreAuthService] Error updating profile in Firestore: $e');
+      }
+    }
+
+    return _fallbackService.updateProfile(
+      userId: userId,
+      name: name,
+      department: department,
+      academicYear: academicYear,
+      avatarUrl: avatarUrl,
+    );
+  }
+
+  @override
   Future<void> logout() async {
     final auth = _auth ?? FirebaseManager.auth;
     if (auth != null) {

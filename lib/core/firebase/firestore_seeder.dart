@@ -21,7 +21,8 @@ class FirestoreSeeder {
       final resSnapshot = await firestore
           .collection(FirebaseManager.colResources)
           .limit(1)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       if (resSnapshot.docs.isEmpty) {
         debugPrint('[FirestoreSeeder] Seeding initial resources to Cloud Firestore...');
@@ -30,7 +31,7 @@ class FirestoreSeeder {
           final docRef = firestore.collection(FirebaseManager.colResources).doc(item.id);
           batch.set(docRef, item.toJson());
         }
-        await batch.commit();
+        await batch.commit().timeout(const Duration(seconds: 3));
         debugPrint('[FirestoreSeeder] Successfully seeded resources.');
       }
 
@@ -38,7 +39,8 @@ class FirestoreSeeder {
       final locSnapshot = await firestore
           .collection(FirebaseManager.colPickupLocations)
           .limit(1)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       if (locSnapshot.docs.isEmpty) {
         debugPrint('[FirestoreSeeder] Seeding campus pickup safe zones to Cloud Firestore...');
@@ -47,7 +49,7 @@ class FirestoreSeeder {
           final docRef = firestore.collection(FirebaseManager.colPickupLocations).doc(loc.id);
           batch.set(docRef, loc.toJson());
         }
-        await batch.commit();
+        await batch.commit().timeout(const Duration(seconds: 3));
         debugPrint('[FirestoreSeeder] Successfully seeded pickup locations.');
       }
 
@@ -55,13 +57,15 @@ class FirestoreSeeder {
       final userSnapshot = await firestore
           .collection(FirebaseManager.colUsers)
           .doc(UserModel.mockUser.id)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       if (!userSnapshot.exists) {
         await firestore
             .collection(FirebaseManager.colUsers)
             .doc(UserModel.mockUser.id)
-            .set(UserModel.mockUser.toJson());
+            .set(UserModel.mockUser.toJson())
+            .timeout(const Duration(seconds: 3));
         debugPrint('[FirestoreSeeder] Seeded default user profile.');
       }
     } catch (e) {

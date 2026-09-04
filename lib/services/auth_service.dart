@@ -20,6 +20,13 @@ abstract class AuthService {
     required String studentIdNumber,
     required String documentFileName,
   });
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? name,
+    String? department,
+    String? academicYear,
+    String? avatarUrl,
+  });
   Future<void> logout();
 }
 
@@ -94,6 +101,25 @@ class MockAuthService implements AuthService {
       documentFileName: documentFileName,
     );
     return _currentUser!;
+  }
+
+  @override
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? name,
+    String? department,
+    String? academicYear,
+    String? avatarUrl,
+  }) async {
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        name: name,
+        department: department,
+        academicYear: academicYear,
+        avatarUrl: avatarUrl,
+      );
+    }
+    return _currentUser ?? UserModel.mockUser;
   }
 
   @override

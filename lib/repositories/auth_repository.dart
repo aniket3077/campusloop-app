@@ -55,5 +55,20 @@ class AuthRepository {
         documentFileName: documentFileName,
       );
 
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? name,
+    String? department,
+    String? academicYear,
+    String? avatarUrl,
+  }) =>
+      _authService.updateProfile(
+        userId: userId,
+        name: name,
+        department: department,
+        academicYear: academicYear,
+        avatarUrl: avatarUrl,
+      );
+
   Future<void> logout() => _authService.logout();
 }

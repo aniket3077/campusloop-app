@@ -198,7 +198,16 @@ class AuthProvider extends ChangeNotifier {
         academicYear: academicYear,
         avatarUrl: avatarUrl,
       );
-      _successMessage = 'Profile updated successfully!';
+
+      await _repository.updateProfile(
+        userId: _user!.id,
+        name: name,
+        department: department,
+        academicYear: academicYear,
+        avatarUrl: avatarUrl,
+      );
+
+      _successMessage = 'Profile photo & information updated successfully! ✨';
       _isLoading = false;
       notifyListeners();
       return true;
