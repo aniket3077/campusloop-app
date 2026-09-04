@@ -28,7 +28,7 @@ class FirestoreChatService implements ChatService {
     try {
       final snapshot = await col.orderBy('lastMessageTime', descending: true).get();
       if (snapshot.docs.isEmpty) {
-        return _fallbackService.getConversations();
+        return await _fallbackService.getConversations();
       }
 
       return snapshot.docs.map((doc) {
@@ -55,7 +55,7 @@ class FirestoreChatService implements ChatService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        return _fallbackService.getMessages(conversationId);
+        return await _fallbackService.getMessages(conversationId);
       }
 
       return snapshot.docs.map((doc) {

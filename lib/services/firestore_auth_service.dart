@@ -136,7 +136,7 @@ class FirestoreAuthService implements AuthService {
           return UserModel.fromJson(data);
         }
       }
-      return _fallbackService.login(email: email, password: password);
+      return await _fallbackService.login(email: email, password: password);
     } catch (e) {
       debugPrint('[FirestoreAuthService] Login error, using fallback: $e');
       return _fallbackService.login(email: email, password: password);

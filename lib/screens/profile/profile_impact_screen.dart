@@ -7,6 +7,7 @@ import '../../models/transaction_model.dart';
 import '../../models/user_model.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/common/campus_badge.dart';
+import '../../widgets/common/logout_dialog.dart';
 import '../../widgets/impact/impact_card.dart';
 import '../../widgets/marketplace/resource_card.dart';
 import '../trust/report_screen.dart';
@@ -81,9 +82,16 @@ class _ProfileImpactScreenState extends State<ProfileImpactScreen> with SingleTi
               themeProvider.toggleTheme(!themeProvider.isDarkMode);
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444)),
+            tooltip: 'Log Out',
+            onPressed: () => LogoutDialog.show(context),
+          ),
           PopupMenuButton<String>(
             onSelected: (val) {
-              if (val == 'report') {
+              if (val == 'logout') {
+                LogoutDialog.show(context);
+              } else if (val == 'report') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -102,6 +110,23 @@ class _ProfileImpactScreenState extends State<ProfileImpactScreen> with SingleTi
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout_rounded, color: Color(0xFFDC2626), size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Log Out',
+                      style: TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               const PopupMenuItem(value: 'report', child: Text('Report User')),
               const PopupMenuItem(value: 'block', child: Text('Block User')),
             ],
@@ -159,14 +184,16 @@ class _ProfileImpactScreenState extends State<ProfileImpactScreen> with SingleTi
                     ),
                     const SizedBox(height: 10),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         CampusBadge(
                           university: user.university,
                           isVerified: user.isVerifiedStudent,
                         ),
-                        const SizedBox(width: 8),
                         OutlinedButton.icon(
                           onPressed: () {
                             Navigator.pushNamed(context, AppRoutes.editProfile);
@@ -174,6 +201,26 @@ class _ProfileImpactScreenState extends State<ProfileImpactScreen> with SingleTi
                           icon: const Icon(Icons.edit_outlined, size: 14),
                           label: const Text('Edit Profile', style: TextStyle(fontSize: 12)),
                           style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => LogoutDialog.show(context),
+                          icon: const Icon(Icons.logout_rounded, size: 14, color: Color(0xFFDC2626)),
+                          label: const Text(
+                            'Log Out',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFDC2626),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFFCA5A5)),
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             visualDensity: VisualDensity.compact,
                             shape: RoundedRectangleBorder(

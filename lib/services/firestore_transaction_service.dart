@@ -38,7 +38,7 @@ class FirestoreTransactionService implements TransactionService {
       }
 
       if (allDocs.isEmpty) {
-        return _fallbackService.getUserTransactions(userId);
+        return await _fallbackService.getUserTransactions(userId);
       }
 
       final items = allDocs.values.map((doc) {

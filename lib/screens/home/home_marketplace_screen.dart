@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../models/user_model.dart';
 import '../../providers/app_state_provider.dart';
+import '../../widgets/common/campus_drawer.dart';
 import '../../widgets/marketplace/campus_deals_banner.dart';
 import '../../widgets/marketplace/category_grid_selector.dart';
 import '../../widgets/marketplace/course_filter_bar.dart';
@@ -21,6 +22,7 @@ class HomeMarketplaceScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFE),
+      drawer: const CampusDrawer(),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFBFBFE),
         surfaceTintColor: Colors.transparent,
@@ -30,17 +32,18 @@ class HomeMarketplaceScreen extends StatelessWidget {
         title: Row(
           children: [
             // Hamburger Menu Button
-            IconButton(
-              icon: const Icon(
-                Icons.menu_rounded,
-                color: Color(0xFF0F172A),
-                size: 26,
+            Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(
+                  Icons.menu_rounded,
+                  color: Color(0xFF0F172A),
+                  size: 26,
+                ),
+                tooltip: 'Open Menu',
+                onPressed: () {
+                  Scaffold.of(ctx).openDrawer();
+                },
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Menu clicked')),
-                );
-              },
             ),
             const SizedBox(width: 2),
 

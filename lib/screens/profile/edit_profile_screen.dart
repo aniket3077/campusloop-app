@@ -4,6 +4,7 @@ import '../../models/user_model.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
+import '../../widgets/common/logout_dialog.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -345,6 +346,67 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 icon: Icons.check_circle_rounded,
                 isLoading: _isSaving,
                 onPressed: _handleSave,
+              ),
+
+              const SizedBox(height: 24),
+
+              // 8. Account & Session Danger Zone
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFECACA)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.shield_outlined, color: Color(0xFFDC2626), size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Account & Session',
+                          style: TextStyle(
+                            color: Color(0xFF991B1B),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Log out of your session on this device. You will need to sign in with your college credentials to access your account again.',
+                      style: TextStyle(
+                        color: Color(0xFF7F1D1D),
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFDC2626),
+                          side: const BorderSide(color: Color(0xFFDC2626)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => LogoutDialog.show(context),
+                        icon: const Icon(Icons.logout_rounded, size: 18),
+                        label: const Text(
+                          'Log Out of CampusLoop',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),

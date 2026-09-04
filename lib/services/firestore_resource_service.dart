@@ -71,7 +71,7 @@ class FirestoreResourceService implements ResourceService {
 
       // If Firestore is empty, fallback to mock data
       if (snapshot.docs.isEmpty) {
-        return _fallbackService.fetchResources(
+        return await _fallbackService.fetchResources(
           category: category,
           resourceType: resourceType,
           searchQuery: searchQuery,

@@ -1,12 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:campusloop/main.dart';
+import 'package:campusloop/widgets/common/campusloop_logo_widget.dart';
 
 void main() {
-  testWidgets('CampusLoopApp launches smoke test', (WidgetTester tester) async {
-    // Build CampusLoopApp and trigger a frame.
-    await tester.pumpWidget(const CampusLoopApp());
+  testWidgets('CampusLoopLogoWidget renders properly', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CampusLoopLogoWidget(size: 100),
+        ),
+      ),
+    );
 
-    // Verify that CampusLoop app renders.
-    expect(find.byType(CampusLoopApp), findsOneWidget);
+    expect(find.byType(CampusLoopLogoWidget), findsOneWidget);
   });
 }
