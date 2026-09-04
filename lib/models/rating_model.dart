@@ -49,28 +49,5 @@ class RatingModel {
     };
   }
 
-  static List<RatingModel> get mockRatings => [
-    RatingModel(
-      id: 'rt_001',
-      transactionId: 'tx_001',
-      resourceTitle: 'Linear Algebra & Its Applications (6th Ed)',
-      raterId: 'user_102',
-      raterName: 'Marcus Chen',
-      ratedUserId: 'user_101',
-      rating: 5.0,
-      feedback: 'Punctual, friendly, and communicated pickup timing perfectly at Engineering Quad!',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    RatingModel(
-      id: 'rt_002',
-      transactionId: 'tx_002',
-      resourceTitle: 'TI-84 Plus CE Graphing Calculator',
-      raterId: 'user_103',
-      raterName: 'Sophia Patel',
-      ratedUserId: 'user_101',
-      rating: 4.8,
-      feedback: 'Item was returned on time and in flawless condition. Highly trusted student!',
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-  ];
+  static List<RatingModel> get mockRatings => const [];
 }

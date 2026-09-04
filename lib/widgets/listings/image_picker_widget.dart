@@ -69,7 +69,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       );
 
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
-        final updated = List<String>.from(widget.images)..add(uploadedUrl);
+        final updated = List<String>.from(widget.images);
+        updated.removeWhere((url) => url.contains('photo-1544716278-ca5e3f4abd8c'));
+        updated.insert(0, uploadedUrl);
         widget.onImagesChanged(updated);
 
         if (mounted) {

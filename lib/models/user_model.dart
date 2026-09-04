@@ -78,29 +78,39 @@ class UserModel {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final rawStatus = (json['verificationStatus'] ?? '').toString();
+    StudentVerificationStatus status = StudentVerificationStatus.unverified;
+
+    if (rawStatus.toUpperCase().contains('VERIFIED') && !rawStatus.toUpperCase().contains('UN')) {
+      status = StudentVerificationStatus.verified;
+    } else if (rawStatus.toUpperCase().contains('EMAIL')) {
+      status = StudentVerificationStatus.emailPending;
+    } else if (rawStatus.toUpperCase().contains('ID')) {
+      status = StudentVerificationStatus.idPending;
+    } else if (rawStatus.toUpperCase().contains('REJECT')) {
+      status = StudentVerificationStatus.rejected;
+    } else if (json['isVerifiedStudent'] == true) {
+      status = StudentVerificationStatus.verified;
+    }
+
     return UserModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      university: json['university'] as String,
-      department: json['department'] as String? ?? 'General Studies',
-      academicYear: json['academicYear'] as String? ?? 'Junior (3rd Year)',
-      verificationStatus: StudentVerificationStatus.values.firstWhere(
-        (e) => e.name == json['verificationStatus'],
-        orElse: () => (json['isVerifiedStudent'] == true
-            ? StudentVerificationStatus.verified
-            : StudentVerificationStatus.unverified),
-      ),
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      university: (json['university'] ?? json['collegeName'] ?? 'MIT CSN').toString(),
+      department: (json['department'] ?? 'General Studies').toString(),
+      academicYear: (json['academicYear'] ?? 'Junior (3rd Year)').toString(),
+      verificationStatus: status,
       verificationNote: json['verificationNote'] as String?,
       verifiedAt: json['verifiedAt'] != null
-          ? DateTime.tryParse(json['verifiedAt'] as String)
+          ? DateTime.tryParse(json['verifiedAt'].toString())
           : null,
       avatarUrl: json['avatarUrl'] as String?,
       trustRating: (json['trustRating'] as num?)?.toDouble() ?? 5.0,
-      totalTransactions: json['totalTransactions'] as int? ?? 0,
+      totalTransactions: (json['totalTransactions'] as num?)?.toInt() ?? 0,
       co2SavedKg: (json['co2SavedKg'] as num?)?.toDouble() ?? 0.0,
       moneySavedUsd: (json['moneySavedUsd'] as num?)?.toDouble() ?? 0.0,
-      itemsCirculated: json['itemsCirculated'] as int? ?? 0,
+      itemsCirculated: (json['itemsCirculated'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -155,17 +165,17 @@ class UserModel {
   }
 
   static const UserModel mockUser = UserModel(
-    id: 'user_101',
-    name: 'Aniket Sharma',
-    email: 'aniket@mit.asia',
+    id: 'user_guest',
+    name: 'Campus Student',
+    email: 'student@mit.asia',
     university: 'MIT CSN',
-    department: 'Computer Science & Engineering',
-    academicYear: 'Senior (4th Year)',
-    verificationStatus: StudentVerificationStatus.verified,
-    trustRating: 4.9,
-    totalTransactions: 18,
-    co2SavedKg: 48.5,
-    moneySavedUsd: 410.00,
-    itemsCirculated: 14,
+    department: 'Engineering',
+    academicYear: 'Student',
+    verificationStatus: StudentVerificationStatus.unverified,
+    trustRating: 5.0,
+    totalTransactions: 0,
+    co2SavedKg: 0.0,
+    moneySavedUsd: 0.0,
+    itemsCirculated: 0,
   );
 }

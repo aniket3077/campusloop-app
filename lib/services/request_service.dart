@@ -9,7 +9,7 @@ abstract class RequestService {
 
 /// Cloud Run Request API Service Mock Driver
 class CloudRunRequestService implements RequestService {
-  final List<RequestModel> _requests = List.from(RequestModel.mockRequests);
+  final List<RequestModel> _requests = [];
 
   // Cloud Run API endpoint route
   static const String requestEndpoint = '/api/v1/requests';

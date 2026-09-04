@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/navigation/app_routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/academic_resource_model.dart';
 import '../../providers/app_state_provider.dart';
@@ -68,25 +67,27 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
       currentUser: currentUser,
     );
 
+    final msg = _messageController.text.trim().isEmpty
+        ? 'Proposing price offer of ₹${offerPrice?.toStringAsFixed(0)} for ${widget.resource.title}'
+        : _messageController.text.trim();
+
     await chatProvider.sendMessage(
       conversation.id,
-      _messageController.text.trim().isEmpty
-          ? 'Proposing price offer of ₹${offerPrice?.toStringAsFixed(0)} for ${widget.resource.title}'
-          : _messageController.text.trim(),
+      msg,
       priceOffer: offerPrice,
+      senderId: currentUser?.id,
+      senderName: currentUser?.name,
     );
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Offer of ₹${offerPrice?.toStringAsFixed(0)} sent to ${widget.resource.sellerName}!'),
-          action: SnackBarAction(
-            label: 'Open Chat',
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.chatDetail, arguments: conversation.id);
-            },
-          ),
-        ),
+      appState.notificationProvider.notifyMessageSentToSeller(
+        context: context,
+        conversationId: conversation.id,
+        sellerName: widget.resource.sellerName,
+        itemTitle: widget.resource.title,
+        itemId: widget.resource.id,
+        messageText: msg,
+        priceOffer: offerPrice,
       );
     }
   }

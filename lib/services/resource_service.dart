@@ -22,7 +22,7 @@ abstract class ResourceService {
 }
 
 class MockResourceService implements ResourceService {
-  final List<AcademicResourceModel> _items = List.from(AcademicResourceModel.mockResources);
+  final List<AcademicResourceModel> _items = [];
 
   @override
   Future<List<AcademicResourceModel>> fetchResources({

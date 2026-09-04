@@ -78,30 +78,5 @@ class RequestModel {
     };
   }
 
-  static List<RequestModel> get mockRequests => [
-    RequestModel(
-      id: 'req_001',
-      resourceId: 'res_008',
-      resourceTitle: 'iClicker 2 Student Remote for Physics 41',
-      transactionType: 'BUY',
-      requiredDate: DateTime.now().add(const Duration(days: 3)),
-      optionalMessage: 'Need this remote for Physics 41 midterm polling. Can pick up anywhere on campus!',
-      requesterId: 'user_101',
-      requesterName: 'Alex Rivera',
-      createdAt: DateTime.now().subtract(const Duration(hours: 12)),
-      status: RequestStatus.pending,
-    ),
-    RequestModel(
-      id: 'req_002',
-      resourceId: 'res_009',
-      resourceTitle: 'EE 102 Signals & Systems Problem Solutions Guide',
-      transactionType: 'BORROW',
-      requiredDate: DateTime.now().add(const Duration(days: 5)),
-      optionalMessage: 'Looking to borrow for 1 week during finals prep.',
-      requesterId: 'user_101',
-      requesterName: 'Alex Rivera',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      status: RequestStatus.approved,
-    ),
-  ];
+  static List<RequestModel> get mockRequests => const [];
 }

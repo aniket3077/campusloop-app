@@ -22,7 +22,7 @@ class ResourceProvider extends ChangeNotifier {
   String _selectedType = 'All Types';
   String _selectedCourse = 'All Courses';
   String _searchQuery = '';
-  RangeValues _priceRange = const RangeValues(0, 150);
+  RangeValues _priceRange = const RangeValues(0, 5000);
   String _selectedCondition = 'All';
   String _selectedLocation = 'All Locations';
   bool _availableOnly = false;
@@ -119,12 +119,8 @@ class ResourceProvider extends ChangeNotifier {
 
   Future<bool> addResource(AcademicResourceModel resource) async {
     try {
-      final created = await _repository.createResource(resource);
-      _resources.insert(0, created);
-      notifyListeners();
-
-      // Background sync to backend API (Supabase PostgreSQL via Prisma)
-      BackendApiService.createItem({
+      // 1. Persist directly to Supabase PostgreSQL via backend API
+      final backendItem = await BackendApiService.createItem({
         'title': resource.title,
         'description': resource.description,
         'category': resource.category,
@@ -134,11 +130,24 @@ class ResourceProvider extends ChangeNotifier {
         'courseCode': resource.courseCode,
         'images': resource.imageUrls,
         'pickupLocationName': resource.pickupLocation,
-      }).catchError((_) => null);
+        'isRecommended': true,
+        'isNearby': true,
+      });
+
+      // Use the live Supabase model if returned
+      final finalResource = (backendItem != null && backendItem['id'] != null)
+          ? AcademicResourceModel.fromJson(backendItem)
+          : resource.copyWith(isRecommended: true, isNearby: true);
+
+      _resources.insert(0, finalResource);
+      notifyListeners();
+
+      // Background local repository cache
+      _repository.createResource(finalResource).catchError((_) => finalResource);
 
       return true;
     } catch (e) {
-      // Graceful local insertion so user experience is never blocked
+      debugPrint('[ResourceProvider] Error adding resource: $e');
       _resources.insert(0, resource);
       notifyListeners();
       return true;

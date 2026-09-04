@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../providers/app_state_provider.dart';
 import '../../screens/home/home_marketplace_screen.dart';
 import '../../screens/explore/explore_search_screen.dart';
 import '../../screens/listings/create_listing_screen.dart';
@@ -98,7 +99,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final color = isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B);
 
     return InkWell(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        setState(() => _currentIndex = index);
+        if (index == 0 || index == 1) {
+          try {
+            AppStateProvider.of(context).resourceProvider.loadResources();
+          } catch (_) {}
+        }
+      },
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -176,6 +184,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _buildMessagesNavItem() {
     final isSelected = _currentIndex == 3;
     final color = isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B);
+    final appState = AppStateProvider.of(context);
 
     return InkWell(
       onTap: () => setState(() => _currentIndex = 3),
@@ -185,39 +194,46 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  color: color,
-                  size: 22,
-                ),
-                Positioned(
-                  right: -6,
-                  top: -4,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEF4444),
-                      shape: BoxShape.circle,
+            ListenableBuilder(
+              listenable: appState.chatProvider,
+              builder: (context, _) {
+                final unread = appState.chatProvider.totalUnreadCount;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: color,
+                      size: 22,
                     ),
-                    constraints: const BoxConstraints(
-                      minWidth: 15,
-                      minHeight: 15,
-                    ),
-                    child: const Text(
-                      '2',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
+                    if (unread > 0)
+                      Positioned(
+                        right: -6,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 15,
+                            minHeight: 15,
+                          ),
+                          child: Text(
+                            '$unread',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 3),
             Text(

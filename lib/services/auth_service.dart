@@ -36,11 +36,10 @@ class MockAuthService implements AuthService {
   MockAuthService({AuthApiService? apiService})
       : _apiService = apiService ?? CloudRunAuthApiService();
 
-  UserModel? _currentUser = UserModel.mockUser;
+  UserModel? _currentUser;
 
   @override
   Future<UserModel?> getCurrentUser() async {
-    await Future.delayed(const Duration(milliseconds: 200));
     return _currentUser;
   }
 
@@ -118,8 +117,23 @@ class MockAuthService implements AuthService {
         academicYear: academicYear,
         avatarUrl: avatarUrl,
       );
+      return _currentUser!;
     }
-    return _currentUser ?? UserModel.mockUser;
+    return UserModel(
+      id: userId,
+      name: name ?? 'Student',
+      email: 'student@mit.asia',
+      university: 'MIT CSN',
+      department: department ?? 'Engineering',
+      academicYear: academicYear ?? 'Student',
+      verificationStatus: StudentVerificationStatus.verified,
+      trustRating: 5.0,
+      totalTransactions: 0,
+      co2SavedKg: 0.0,
+      moneySavedUsd: 0.0,
+      itemsCirculated: 0,
+      avatarUrl: avatarUrl,
+    );
   }
 
   @override

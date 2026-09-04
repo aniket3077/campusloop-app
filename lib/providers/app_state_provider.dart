@@ -3,6 +3,7 @@ import 'analytics_provider.dart';
 import 'auth_provider.dart';
 import 'chat_provider.dart';
 import 'digital_product_provider.dart';
+import 'notification_provider.dart';
 import 'offer_provider.dart';
 import 'resource_provider.dart';
 import 'theme_provider.dart';
@@ -13,6 +14,7 @@ class AppStateProvider extends InheritedWidget {
   final AuthProvider authProvider;
   final ResourceProvider resourceProvider;
   final ChatProvider chatProvider;
+  final NotificationProvider notificationProvider;
   final TransactionProvider transactionProvider;
   final OfferProvider offerProvider;
   final DigitalProductProvider digitalProductProvider;
@@ -25,6 +27,7 @@ class AppStateProvider extends InheritedWidget {
     required this.authProvider,
     required this.resourceProvider,
     required this.chatProvider,
+    required this.notificationProvider,
     required this.transactionProvider,
     required this.offerProvider,
     required this.digitalProductProvider,
@@ -50,6 +53,7 @@ class AppStateProvider extends InheritedWidget {
     return authProvider != oldWidget.authProvider ||
         resourceProvider != oldWidget.resourceProvider ||
         chatProvider != oldWidget.chatProvider ||
+        notificationProvider != oldWidget.notificationProvider ||
         transactionProvider != oldWidget.transactionProvider ||
         offerProvider != oldWidget.offerProvider ||
         digitalProductProvider != oldWidget.digitalProductProvider ||

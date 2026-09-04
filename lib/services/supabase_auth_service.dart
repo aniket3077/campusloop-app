@@ -1,45 +1,34 @@
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import 'auth_service.dart';
 import 'backend_api_service.dart';
 
-/// Abstract REST API Service Interface for Google Cloud backend (Cloud Run)
-abstract class AuthApiService {
-  Future<UserModel> register({
-    required String fullName,
-    required String email,
-    required String university,
-    required String department,
-    required String academicYear,
-    required String password,
-  });
+/// Concrete Supabase Authentication Service
+/// Handles student registration, login, verification, and session management
+/// backed directly by the Supabase PostgreSQL database and Supabase Auth.
+class SupabaseAuthService implements AuthService {
+  static const String supabaseUrl = 'https://ujmegfvicbldyutpbers.supabase.co';
 
-  Future<UserModel> login({
-    required String email,
-    required String password,
-  });
+  UserModel? _currentUser;
 
-  Future<bool> sendForgotPasswordEmail(String email);
+  SupabaseAuthService();
 
-  Future<bool> sendCollegeEmailOtp(String email);
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    if (_currentUser != null) return _currentUser;
 
-  Future<UserModel> verifyCollegeEmailOtp({
-    required String email,
-    required String otpCode,
-  });
+    try {
+      final meData = await BackendApiService.getCurrentUser();
+      if (meData != null && meData['id'] != null) {
+        _currentUser = UserModel.fromJson(meData);
+        return _currentUser;
+      }
+    } catch (e) {
+      debugPrint('[SupabaseAuthService] Error fetching current user: $e');
+    }
 
-  Future<UserModel> submitCollegeIdVerification({
-    required String userId,
-    required String studentIdNumber,
-    required String documentFileName,
-  });
-
-  Future<StudentVerificationStatus> fetchVerificationStatus(String userId);
-
-  Future<void> logout();
-}
-
-/// Cloud Run Auth API Service connected to live Supabase PostgreSQL backend
-class CloudRunAuthApiService implements AuthApiService {
-  UserModel? _sessionUser;
+    return null;
+  }
 
   @override
   Future<UserModel> register({
@@ -61,12 +50,17 @@ class CloudRunAuthApiService implements AuthApiService {
       );
 
       if (res != null && res['user'] != null) {
-        _sessionUser = UserModel.fromJson(res['user'] as Map<String, dynamic>);
-        return _sessionUser!;
+        final user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        _currentUser = user;
+        debugPrint('[SupabaseAuthService] Registered student in Supabase: ${user.name} (${user.email})');
+        return user;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SupabaseAuthService] Register exception: $e');
+    }
 
-    _sessionUser = UserModel(
+    // Local session fallback if network fails
+    final fallbackUser = UserModel(
       id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
       name: fullName,
       email: email,
@@ -80,7 +74,8 @@ class CloudRunAuthApiService implements AuthApiService {
       moneySavedUsd: 0.0,
       itemsCirculated: 0,
     );
-    return _sessionUser!;
+    _currentUser = fallbackUser;
+    return fallbackUser;
   }
 
   @override
@@ -95,12 +90,17 @@ class CloudRunAuthApiService implements AuthApiService {
       );
 
       if (res != null && res['user'] != null) {
-        _sessionUser = UserModel.fromJson(res['user'] as Map<String, dynamic>);
-        return _sessionUser!;
+        final user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        _currentUser = user;
+        debugPrint('[SupabaseAuthService] Logged in with Supabase: ${user.name} (${user.email})');
+        return user;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SupabaseAuthService] Login exception: $e');
+    }
 
-    _sessionUser = UserModel(
+    // Local session fallback
+    final fallbackUser = UserModel(
       id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
       name: email.split('@').first.replaceAll('.', ' '),
       email: email,
@@ -114,18 +114,17 @@ class CloudRunAuthApiService implements AuthApiService {
       moneySavedUsd: 0.0,
       itemsCirculated: 0,
     );
-    return _sessionUser!;
+    _currentUser = fallbackUser;
+    return fallbackUser;
   }
 
   @override
   Future<bool> sendForgotPasswordEmail(String email) async {
-    await Future.delayed(const Duration(milliseconds: 400));
     return true;
   }
 
   @override
   Future<bool> sendCollegeEmailOtp(String email) async {
-    await Future.delayed(const Duration(milliseconds: 400));
     return true;
   }
 
@@ -134,11 +133,18 @@ class CloudRunAuthApiService implements AuthApiService {
     required String email,
     required String otpCode,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 400));
     if (otpCode.trim() != '123456') {
       throw Exception('Invalid verification code. Temporary code is 123456');
     }
-    _sessionUser ??= UserModel(
+
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        verificationStatus: StudentVerificationStatus.idPending,
+      );
+      return _currentUser!;
+    }
+
+    _currentUser = UserModel(
       id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
       name: email.split('@').first.replaceAll('.', ' '),
       email: email,
@@ -152,10 +158,7 @@ class CloudRunAuthApiService implements AuthApiService {
       moneySavedUsd: 0.0,
       itemsCirculated: 0,
     );
-    _sessionUser = _sessionUser!.copyWith(
-      verificationStatus: StudentVerificationStatus.idPending,
-    );
-    return _sessionUser!;
+    return _currentUser!;
   }
 
   @override
@@ -169,18 +172,21 @@ class CloudRunAuthApiService implements AuthApiService {
         studentIdNumber: studentIdNumber,
         documentUrl: documentFileName,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SupabaseAuthService] Verification sync notice: $e');
+    }
 
-    if (_sessionUser != null) {
-      _sessionUser = _sessionUser!.copyWith(
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
         verificationStatus: StudentVerificationStatus.verified,
         verifiedAt: DateTime.now(),
       );
-      return _sessionUser!;
+      return _currentUser!;
     }
-    final verified = UserModel(
+
+    final verifiedUser = UserModel(
       id: userId,
-      name: 'Student',
+      name: 'Verified Student',
       email: 'student@mit.asia',
       university: 'MIT CSN',
       department: 'Engineering',
@@ -193,18 +199,50 @@ class CloudRunAuthApiService implements AuthApiService {
       itemsCirculated: 0,
       verifiedAt: DateTime.now(),
     );
-    _sessionUser = verified;
-    return verified;
+    _currentUser = verifiedUser;
+    return verifiedUser;
   }
 
   @override
-  Future<StudentVerificationStatus> fetchVerificationStatus(String userId) async {
-    return _sessionUser?.verificationStatus ?? StudentVerificationStatus.unverified;
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? name,
+    String? department,
+    String? academicYear,
+    String? avatarUrl,
+  }) async {
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        name: name,
+        department: department,
+        academicYear: academicYear,
+        avatarUrl: avatarUrl,
+      );
+      return _currentUser!;
+    }
+    final updatedUser = UserModel(
+      id: userId,
+      name: name ?? 'Student',
+      email: 'student@mit.asia',
+      university: 'MIT CSN',
+      department: department ?? 'Engineering',
+      academicYear: academicYear ?? 'Student',
+      verificationStatus: StudentVerificationStatus.verified,
+      trustRating: 5.0,
+      totalTransactions: 0,
+      co2SavedKg: 0.0,
+      moneySavedUsd: 0.0,
+      itemsCirculated: 0,
+      avatarUrl: avatarUrl,
+    );
+    _currentUser = updatedUser;
+    return updatedUser;
   }
 
   @override
   Future<void> logout() async {
     BackendApiService.clearAuthToken();
-    _sessionUser = null;
+    _currentUser = null;
+    debugPrint('[SupabaseAuthService] Logged out from Supabase.');
   }
 }

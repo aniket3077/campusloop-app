@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/academic_resource_model.dart';
+import '../common/product_image_view.dart';
 import '../common/resource_type_chip.dart';
 
 class ResourceCard extends StatelessWidget {
@@ -35,19 +36,14 @@ class ResourceCard extends StatelessWidget {
             // Image header & transaction/price badges
             Stack(
               children: [
-                Container(
-                  height: 110,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _getCategoryIcon(resource.category),
-                      size: 44,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.7),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: ProductImageView(
+                    imageUrl: resource.imageUrls.isNotEmpty ? resource.imageUrls.first : null,
+                    category: resource.category,
+                    height: 110,
+                    width: double.infinity,
+                    fallbackIcon: _getCategoryIcon(resource.category),
                   ),
                 ),
 

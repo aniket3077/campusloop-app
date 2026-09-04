@@ -1,11 +1,11 @@
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_auth_service.dart';
+import '../services/supabase_auth_service.dart';
 
 class AuthRepository {
   final AuthService _authService;
 
-  AuthRepository({AuthService? authService}) : _authService = authService ?? FirestoreAuthService();
+  AuthRepository({AuthService? authService}) : _authService = authService ?? SupabaseAuthService();
 
   Future<UserModel?> getCurrentUser() => _authService.getCurrentUser();
 

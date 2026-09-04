@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
 import 'core/firebase/firebase_manager.dart';
-import 'core/firebase/firestore_seeder.dart';
 import 'core/navigation/app_router.dart';
 import 'core/navigation/app_routes.dart';
 import 'core/theme/app_theme.dart';
@@ -10,6 +9,7 @@ import 'providers/app_state_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/digital_product_provider.dart';
+import 'providers/notification_provider.dart';
 import 'providers/offer_provider.dart';
 import 'providers/resource_provider.dart';
 import 'providers/theme_provider.dart';
@@ -28,11 +28,6 @@ Future<void> main() async {
 
   // 1. Launch UI immediately so the user never sees a black screen
   runApp(const CampusLoopApp());
-
-  // 2. Seed sample database collections in background without blocking app startup
-  FirestoreSeeder.seedIfEmpty().catchError((e) {
-    debugPrint('[FirestoreSeeder] Background seeding notice: $e');
-  });
 }
 
 class CampusLoopApp extends StatefulWidget {
@@ -46,6 +41,7 @@ class _CampusLoopAppState extends State<CampusLoopApp> {
   late final AuthProvider _authProvider;
   late final ResourceProvider _resourceProvider;
   late final ChatProvider _chatProvider;
+  late final NotificationProvider _notificationProvider;
   late final TransactionProvider _transactionProvider;
   late final OfferProvider _offerProvider;
   late final DigitalProductProvider _digitalProductProvider;
@@ -59,6 +55,7 @@ class _CampusLoopAppState extends State<CampusLoopApp> {
     _authProvider = AuthProvider();
     _resourceProvider = ResourceProvider();
     _chatProvider = ChatProvider();
+    _notificationProvider = NotificationProvider();
     _transactionProvider = TransactionProvider();
     _offerProvider = OfferProvider();
     _digitalProductProvider = DigitalProductProvider();
@@ -72,6 +69,7 @@ class _CampusLoopAppState extends State<CampusLoopApp> {
     _authProvider.dispose();
     _resourceProvider.dispose();
     _chatProvider.dispose();
+    _notificationProvider.dispose();
     _transactionProvider.dispose();
     _offerProvider.dispose();
     _digitalProductProvider.dispose();
@@ -87,6 +85,7 @@ class _CampusLoopAppState extends State<CampusLoopApp> {
       authProvider: _authProvider,
       resourceProvider: _resourceProvider,
       chatProvider: _chatProvider,
+      notificationProvider: _notificationProvider,
       transactionProvider: _transactionProvider,
       offerProvider: _offerProvider,
       digitalProductProvider: _digitalProductProvider,
@@ -98,6 +97,7 @@ class _CampusLoopAppState extends State<CampusLoopApp> {
         builder: (context, _) {
           return MaterialApp(
             title: AppConstants.appName,
+            navigatorKey: AppRouter.navigatorKey,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

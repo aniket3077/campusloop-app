@@ -10,6 +10,7 @@ class AppRoutes {
   static const String resourceDetail = '/resource-detail';
   static const String createListing = '/create-listing';
   static const String myListings = '/my-listings';
+  static const String chatList = '/chat-list';
   static const String chatDetail = '/chat-detail';
   static const String category = '/category';
   static const String transactions = '/transactions';

@@ -8,6 +8,7 @@ import '../../screens/auth/register_screen.dart';
 import '../../screens/auth/verification_pending_screen.dart';
 import '../../screens/auth/verification_success_screen.dart';
 import '../../screens/chat/chat_detail_screen.dart';
+import '../../screens/chat/chat_list_screen.dart';
 import '../../screens/digital/create_digital_listing_screen.dart';
 import '../../screens/digital/digital_marketplace_screen.dart';
 import '../../screens/discovery/category_screen.dart';
@@ -24,6 +25,8 @@ import 'app_routes.dart';
 import 'main_navigation_shell.dart';
 
 class AppRouter {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.splash:
@@ -55,6 +58,9 @@ class AppRouter {
 
       case AppRoutes.myListings:
         return MaterialPageRoute(builder: (_) => const MyListingsScreen());
+
+      case AppRoutes.chatList:
+        return MaterialPageRoute(builder: (_) => const ChatListScreen());
 
       case AppRoutes.transactions:
         return MaterialPageRoute(builder: (_) => const TransactionHistoryScreen());

@@ -9,7 +9,7 @@ abstract class TrustService {
 }
 
 class CloudRunTrustService implements TrustService {
-  final List<RatingModel> _ratings = List.from(RatingModel.mockRatings);
+  final List<RatingModel> _ratings = [];
   final List<ReportModel> _reports = [];
   final Set<String> _blockedUsers = {};
 

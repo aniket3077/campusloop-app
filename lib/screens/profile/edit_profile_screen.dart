@@ -570,7 +570,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               CustomTextField(
                 controller: _nameController,
                 label: 'Full Name',
-                hint: 'e.g. Aniket Sharma',
+                hint: 'e.g. Rahul Verma',
                 prefixIcon: Icons.person_outline,
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {

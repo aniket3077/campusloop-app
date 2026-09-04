@@ -10,7 +10,7 @@ abstract class TransactionService {
 
 /// Cloud Run Transaction REST API Implementation Driver
 class CloudRunTransactionService implements TransactionService {
-  final List<TransactionModel> _transactions = List.from(TransactionModel.mockTransactions);
+  final List<TransactionModel> _transactions = [];
 
   // Cloud Run API endpoint
   static const String transactionEndpoint = '/api/v1/transactions';

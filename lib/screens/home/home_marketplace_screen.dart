@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/navigation/app_routes.dart';
+import '../../models/academic_resource_model.dart';
 import '../../models/user_model.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/common/campus_drawer.dart';
@@ -9,9 +11,40 @@ import '../../widgets/marketplace/course_filter_bar.dart';
 import '../../widgets/marketplace/horizontal_resource_section.dart';
 import '../../widgets/marketplace/quick_action_bar.dart';
 import '../../widgets/marketplace/welcome_hero_card.dart';
+import '../../widgets/notifications/notifications_bottom_sheet.dart';
 
-class HomeMarketplaceScreen extends StatelessWidget {
+class HomeMarketplaceScreen extends StatefulWidget {
   const HomeMarketplaceScreen({super.key});
+
+  @override
+  State<HomeMarketplaceScreen> createState() => _HomeMarketplaceScreenState();
+}
+
+class _HomeMarketplaceScreenState extends State<HomeMarketplaceScreen> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppStateProvider.of(context).resourceProvider.loadResources();
+      }
+    });
+
+    // Automatically poll for new products uploaded by other campus students
+    _refreshTimer = Timer.periodic(const Duration(seconds: 12), (_) {
+      if (mounted) {
+        AppStateProvider.of(context).resourceProvider.loadResources();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,47 +161,53 @@ class HomeMarketplaceScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          // Notification Bell with Badge "3"
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: Color(0xFF0F172A),
-                  size: 26,
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('You have 3 new notifications.')),
-                  );
-                },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '3',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
+          // Interactive Notification Bell with Live Unread Counter
+          ListenableBuilder(
+            listenable: appState.notificationProvider,
+            builder: (context, _) {
+              final unread = appState.notificationProvider.unreadCount;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF0F172A),
+                      size: 26,
                     ),
-                    textAlign: TextAlign.center,
+                    tooltip: 'Notifications',
+                    onPressed: () {
+                      NotificationsBottomSheet.show(context);
+                    },
                   ),
-                ),
-              ),
-            ],
+                  if (unread > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        child: Text(
+                          unread > 9 ? '9+' : '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
 
           // User Avatar with Verified Green Checkmark
@@ -223,21 +262,26 @@ class HomeMarketplaceScreen extends StatelessWidget {
         builder: (context, _) {
           final allResources = resourceProvider.resources;
 
-          // Recommended Items
-          final recommendedItems = allResources
-              .where((r) => r.isRecommended)
-              .toList();
+          // Recent listings sorted by newest created so user-uploaded S3 products appear immediately
+          final recentListings = List<AcademicResourceModel>.from(allResources)
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          // Recent Listings Near You
-          final nearbyResources = allResources
-              .where((r) => r.isNearby || r.distanceMeters != null)
-              .toList();
+          // Recommended Items (Newest uploads prioritized)
+          final recommendedItems = (allResources.where((r) => r.isRecommended).toList())
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          // Nearby Items (Newest uploads prioritized)
+          final nearbyResources = (allResources.where((r) => r.isNearby || r.distanceMeters != null).toList())
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          return RefreshIndicator(
+            onRefresh: () => resourceProvider.loadResources(),
+            color: const Color(0xFF4F46E5),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 const SizedBox(height: 6),
 
                 // 1. Search Bar (Pill with filter sliders)
@@ -347,7 +391,7 @@ class HomeMarketplaceScreen extends StatelessWidget {
                   title: 'Recommended for You',
                   items: recommendedItems.isNotEmpty
                       ? recommendedItems
-                      : allResources.take(4).toList(),
+                      : recentListings.take(5).toList(),
                   isCompact: false,
                   onSeeAll: () {
                     Navigator.pushNamed(context, AppRoutes.category, arguments: 'All');
@@ -359,9 +403,9 @@ class HomeMarketplaceScreen extends StatelessWidget {
                 // 7. Recent Listings Near You Section
                 HorizontalResourceSection(
                   title: 'Recent Listings Near You',
-                  items: nearbyResources.isNotEmpty
-                      ? nearbyResources
-                      : allResources.skip(4).toList(),
+                  items: recentListings.isNotEmpty
+                      ? recentListings
+                      : (nearbyResources.isNotEmpty ? nearbyResources : allResources),
                   isCompact: true,
                   onSeeAll: () {
                     Navigator.pushNamed(context, AppRoutes.category, arguments: 'All');
@@ -480,9 +524,10 @@ class HomeMarketplaceScreen extends StatelessWidget {
                 const SizedBox(height: 100),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  );
+}
 }

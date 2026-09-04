@@ -9,7 +9,7 @@ abstract class OfferService {
 }
 
 class CloudRunOfferService implements OfferService {
-  final List<OfferModel> _offers = List.from(OfferModel.mockOffers);
+  final List<OfferModel> _offers = [];
 
   static const String offerEndpoint = '/api/v1/offers';
 

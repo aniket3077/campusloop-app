@@ -295,7 +295,15 @@ class _ProfileImpactScreenState extends State<ProfileImpactScreen> with SingleTi
                     const SizedBox(height: 20),
 
                     // Personal Impact Dashboard Summary
-                    const ImpactCard(stats: ImpactStatsModel.mockCampusImpact),
+                    ImpactCard(
+                      stats: ImpactStatsModel(
+                        co2SavedKg: user.co2SavedKg,
+                        itemsReused: user.itemsCirculated,
+                        moneySavedUsd: user.moneySavedUsd,
+                        treesSavedEquivalent: (user.co2SavedKg / 20.0).round(),
+                        activeCampusBorrowers: user.totalTransactions,
+                      ),
+                    ),
                   ],
                 ),
               ),

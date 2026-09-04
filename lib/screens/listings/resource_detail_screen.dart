@@ -6,6 +6,7 @@ import '../../models/report_model.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/common/campus_badge.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/product_image_view.dart';
 import '../../widgets/common/resource_type_chip.dart';
 import '../../widgets/listings/make_offer_bottom_sheet.dart';
 import '../requests/request_screen.dart';
@@ -104,30 +105,13 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                           itemBuilder: (context, index) {
                             return Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+                              child: ProductImageView(
+                                imageUrl: images[index],
+                                category: res.category,
+                                height: double.infinity,
+                                width: double.infinity,
                                 borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      _getCategoryIcon(res.category),
-                                      size: 72,
-                                      color: theme.colorScheme.primary,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Photo ${index + 1} of ${images.length}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                fallbackIcon: _getCategoryIcon(res.category),
                               ),
                             );
                           },
@@ -372,21 +356,55 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                   ),
                 ],
               ),
-              child: res.isAvailable
-                  ? Column(
+              child: Builder(
+                builder: (context) {
+                  final appState = AppStateProvider.of(context);
+                  final currentUser = appState.authProvider.user;
+                  final isSeller = currentUser != null &&
+                      (currentUser.id == res.sellerId ||
+                       (currentUser.name.isNotEmpty && currentUser.name.toLowerCase() == res.sellerName.toLowerCase()));
+
+                  if (isSeller) {
+                    return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFBBF7D0)),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.verified_user_rounded, color: Color(0xFF16A34A), size: 18),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Your Active Campus Listing • Buyers can reach out to you',
+                                  style: TextStyle(
+                                    color: Color(0xFF15803D),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         Row(
                           children: [
                             Expanded(
+                              flex: 3,
                               child: CustomButton(
-                                text: 'Chat with Owner',
+                                text: 'Chat with Buyers',
+                                icon: Icons.chat_bubble_rounded,
                                 onPressed: () {
-                                  final appState = AppStateProvider.of(context);
-                                  final currentUser = appState.authProvider.user;
                                   final conversation = appState.chatProvider.getOrCreateConversationForResource(
                                     resource: res,
                                     currentUser: currentUser,
+                                    asSeller: true,
                                   );
                                   Navigator.pushNamed(
                                     context,
@@ -394,43 +412,28 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                                     arguments: conversation.id,
                                   );
                                 },
-                                isOutlined: true,
-                                icon: Icons.chat_bubble_outline_rounded,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
+                              flex: 2,
                               child: CustomButton(
-                                text: _getActionText(res.resourceType),
+                                text: 'All Chats',
+                                isOutlined: true,
+                                icon: Icons.forum_outlined,
                                 onPressed: () {
-                                  if (res.resourceType.toUpperCase() == 'DONATE') {
-                                    final appState = AppStateProvider.of(context);
-                                    final currentUser = appState.authProvider.user;
-                                    final conversation = appState.chatProvider.getOrCreateConversationForResource(
-                                      resource: res,
-                                      currentUser: currentUser,
-                                    );
-                                    appState.chatProvider.sendMessage(
-                                      conversation.id,
-                                      'Hi ${res.sellerName}! I would love to claim your donated item: "${res.title}". When can we meet at ${res.pickupLocation}?',
-                                    );
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.chatDetail,
-                                      arguments: conversation.id,
-                                    );
-                                  } else {
-                                    MakeOfferBottomSheet.show(context, res);
-                                  }
+                                  Navigator.pushNamed(context, AppRoutes.chatList);
                                 },
-                                icon: _getActionIcon(res.resourceType),
                               ),
                             ),
                           ],
                         ),
                       ],
-                    )
-                  : SizedBox(
+                    );
+                  }
+
+                  if (!res.isAvailable) {
+                    return SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
@@ -451,7 +454,75 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                           );
                         },
                       ),
-                    ),
+                    );
+                  }
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomButton(
+                              text: 'Chat with Seller',
+                              onPressed: () {
+                                final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                  resource: res,
+                                  currentUser: currentUser,
+                                );
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.chatDetail,
+                                  arguments: conversation.id,
+                                );
+                              },
+                              isOutlined: true,
+                              icon: Icons.chat_bubble_outline_rounded,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomButton(
+                              text: _getActionText(res.resourceType),
+                              onPressed: () {
+                                if (res.resourceType.toUpperCase() == 'DONATE') {
+                                  final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                    resource: res,
+                                    currentUser: currentUser,
+                                  );
+                                  final claimMsg = 'Hi ${res.sellerName}! I would love to claim your donated item: "${res.title}". When can we meet at ${res.pickupLocation}?';
+                                  appState.chatProvider.sendMessage(
+                                    conversation.id,
+                                    claimMsg,
+                                    senderId: currentUser?.id,
+                                    senderName: currentUser?.name,
+                                  );
+                                  appState.notificationProvider.notifyMessageSentToSeller(
+                                    context: context,
+                                    conversationId: conversation.id,
+                                    sellerName: res.sellerName,
+                                    itemTitle: res.title,
+                                    itemId: res.id,
+                                    messageText: claimMsg,
+                                  );
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.chatDetail,
+                                    arguments: conversation.id,
+                                  );
+                                } else {
+                                  MakeOfferBottomSheet.show(context, res);
+                                }
+                              },
+                              icon: _getActionIcon(res.resourceType),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],

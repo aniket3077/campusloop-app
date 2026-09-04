@@ -50,10 +50,21 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  int get totalUnreadCount => _conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
+
+  void markConversationRead(String conversationId) {
+    final idx = _conversations.indexWhere((c) => c.id == conversationId);
+    if (idx != -1 && _conversations[idx].unreadCount > 0) {
+      _conversations[idx] = _conversations[idx].copyWith(unreadCount: 0);
+      notifyListeners();
+    }
+  }
+
   /// Automatically connects buyer to seller for a specific listing
   ChatConversationModel getOrCreateConversationForResource({
     required AcademicResourceModel resource,
     UserModel? currentUser,
+    bool asSeller = false,
   }) {
     // 1. Check if conversation for this resource already exists
     final existing = _conversations.where((c) => c.resourceId == resource.id).firstOrNull;
@@ -61,8 +72,34 @@ class ChatProvider extends ChangeNotifier {
       return existing;
     }
 
-    // 2. Create a new conversation for this specific item and seller
+    final isUserSeller = asSeller || (currentUser != null &&
+        (currentUser.id == resource.sellerId ||
+         (currentUser.name.isNotEmpty && currentUser.name.toLowerCase() == resource.sellerName.toLowerCase())));
+
     final convId = 'conv_${resource.id}_${DateTime.now().millisecondsSinceEpoch}';
+
+    final participant = isUserSeller
+        ? const ParticipantModel(
+            id: 'buyer_sophia',
+            name: 'Sophia Patel (Buyer)',
+            university: 'Stanford University',
+            department: 'Computer Science',
+            isVerifiedStudent: true,
+            trustRating: 4.9,
+          )
+        : ParticipantModel(
+            id: resource.sellerId,
+            name: resource.sellerName,
+            university: resource.university,
+            department: 'Campus Student',
+            isVerifiedStudent: resource.isVerifiedSeller,
+            trustRating: resource.sellerRating,
+          );
+
+    final initialText = isUserSeller
+        ? 'Hi ${resource.sellerName}! I saw your listing "${resource.title}". Is it still available for campus pickup today?'
+        : 'Hi ${resource.sellerName}! I saw your listing "${resource.title}". Is it still available on campus?';
+
     final newConv = ChatConversationModel(
       id: convId,
       resourceId: resource.id,
@@ -70,31 +107,24 @@ class ChatProvider extends ChangeNotifier {
       resourceType: resource.resourceType,
       resourcePrice: resource.price,
       resourceImageUrl: resource.imageUrls.isNotEmpty ? resource.imageUrls.first : null,
-      participant: ParticipantModel(
-        id: resource.sellerId,
-        name: resource.sellerName,
-        university: resource.university,
-        department: 'Campus Student',
-        isVerifiedStudent: resource.isVerifiedSeller,
-        trustRating: resource.sellerRating,
-      ),
-      lastMessage: 'Started chat about ${resource.title}',
+      participant: participant,
+      lastMessage: initialText,
       lastMessageTime: DateTime.now(),
-      unreadCount: 0,
+      unreadCount: isUserSeller ? 1 : 0,
     );
 
     _conversations.insert(0, newConv);
 
-    // Add initial inquiry message so the chat isn't blank
+    // Add initial message
     _conversationMessages[convId] = [
       ChatMessageModel(
         id: 'msg_init_${DateTime.now().millisecondsSinceEpoch}',
         conversationId: convId,
-        senderId: currentUser?.id ?? 'buyer_101',
-        senderName: currentUser?.name ?? 'Alex Rivera',
-        text: 'Hi ${resource.sellerName}! I saw your listing "${resource.title}". Is it still available on campus?',
+        senderId: isUserSeller ? participant.id : (currentUser?.id ?? 'buyer_101'),
+        senderName: isUserSeller ? participant.name : (currentUser?.name ?? 'Alex Rivera'),
+        text: initialText,
         timestamp: DateTime.now(),
-        isMine: true,
+        isMine: !isUserSeller,
       ),
     ];
 
@@ -112,13 +142,19 @@ class ChatProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> sendMessage(String conversationId, String text, {double? priceOffer}) async {
+  Future<void> sendMessage(
+    String conversationId,
+    String text, {
+    double? priceOffer,
+    String? senderId,
+    String? senderName,
+  }) async {
     // 1. Immediately create and add message locally so the UI updates instantly!
     final tempMsg = ChatMessageModel(
       id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
       conversationId: conversationId,
-      senderId: 'user_101',
-      senderName: 'Alex Rivera',
+      senderId: senderId ?? 'user_current',
+      senderName: senderName ?? 'Me',
       text: text,
       priceOffer: priceOffer,
       timestamp: DateTime.now(),

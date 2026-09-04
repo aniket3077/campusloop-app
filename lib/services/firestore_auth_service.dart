@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/foundation.dart';
 import '../core/firebase/firebase_manager.dart';
 import '../models/user_model.dart';
+import 'auth_api_service.dart';
 import 'auth_service.dart';
+import 'backend_api_service.dart';
 
 /// Concrete Google Cloud Firestore & Firebase Auth implementation of [AuthService]
 class FirestoreAuthService implements AuthService {
@@ -17,7 +19,7 @@ class FirestoreAuthService implements AuthService {
     AuthService? fallbackService,
   })  : _auth = auth ?? FirebaseManager.auth,
         _firestore = firestore ?? FirebaseManager.firestore,
-        _fallbackService = fallbackService ?? MockAuthService();
+        _fallbackService = fallbackService ?? MockAuthService(apiService: CloudRunAuthApiService());
 
   CollectionReference<Map<String, dynamic>>? get _usersCol {
     final db = _firestore ?? FirebaseManager.firestore;
@@ -26,26 +28,21 @@ class FirestoreAuthService implements AuthService {
 
   @override
   Future<UserModel?> getCurrentUser() async {
-    final auth = _auth ?? FirebaseManager.auth;
-    final col = _usersCol;
-
-    if (auth == null || col == null || auth.currentUser == null) {
-      return _fallbackService.getCurrentUser();
+    // 1. Try session user from CloudRunAuthApiService
+    final sessionUser = await _fallbackService.getCurrentUser();
+    if (sessionUser != null) {
+      return sessionUser;
     }
 
+    // 2. Try fetching from PostgreSQL backend using stored token
     try {
-      final uid = auth.currentUser!.uid;
-      final doc = await col.doc(uid).get();
-      if (doc.exists && doc.data() != null) {
-        final data = Map<String, dynamic>.from(doc.data()!);
-        data['id'] = doc.id;
-        return UserModel.fromJson(data);
+      final me = await BackendApiService.getCurrentUser();
+      if (me != null && me['id'] != null) {
+        return UserModel.fromJson(me);
       }
-    } catch (e) {
-      debugPrint('[FirestoreAuthService] Error fetching user profile: $e');
-    }
+    } catch (_) {}
 
-    return _fallbackService.getCurrentUser();
+    return null;
   }
 
   @override
@@ -57,56 +54,28 @@ class FirestoreAuthService implements AuthService {
     required String academicYear,
     required String password,
   }) async {
-    final auth = _auth ?? FirebaseManager.auth;
+    // 1. Connect and register with live PostgreSQL backend
+    final user = await _fallbackService.register(
+      fullName: fullName,
+      email: email,
+      university: university,
+      department: department,
+      academicYear: academicYear,
+      password: password,
+    );
+
+    // 2. Optional Firestore sync with fast timeout
     final col = _usersCol;
-
-    if (auth == null || col == null) {
-      return _fallbackService.register(
-        fullName: fullName,
-        email: email,
-        university: university,
-        department: department,
-        academicYear: academicYear,
-        password: password,
-      );
+    if (col != null && user.id.isNotEmpty) {
+      try {
+        await col
+            .doc(user.id)
+            .set(user.toJson(), SetOptions(merge: true))
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {}
     }
 
-    try {
-      final credential = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final uid = credential.user?.uid ?? DateTime.now().millisecondsSinceEpoch.toString();
-
-      final user = UserModel(
-        id: uid,
-        name: fullName,
-        email: email,
-        university: university,
-        department: department,
-        academicYear: academicYear,
-        verificationStatus: StudentVerificationStatus.emailPending,
-        trustRating: 5.0,
-        totalTransactions: 0,
-        co2SavedKg: 0.0,
-        moneySavedUsd: 0.0,
-        itemsCirculated: 0,
-      );
-
-      await col.doc(uid).set(user.toJson(), SetOptions(merge: true));
-      return user;
-    } catch (e) {
-      debugPrint('[FirestoreAuthService] Registration error, using fallback: $e');
-      return _fallbackService.register(
-        fullName: fullName,
-        email: email,
-        university: university,
-        department: department,
-        academicYear: academicYear,
-        password: password,
-      );
-    }
+    return user;
   }
 
   @override
@@ -114,33 +83,21 @@ class FirestoreAuthService implements AuthService {
     required String email,
     required String password,
   }) async {
-    final auth = _auth ?? FirebaseManager.auth;
+    // 1. Authenticate with live PostgreSQL backend
+    final user = await _fallbackService.login(email: email, password: password);
+
+    // 2. Optional Firestore sync with fast timeout
     final col = _usersCol;
-
-    if (auth == null || col == null) {
-      return _fallbackService.login(email: email, password: password);
+    if (col != null && user.id.isNotEmpty) {
+      try {
+        await col
+            .doc(user.id)
+            .set(user.toJson(), SetOptions(merge: true))
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {}
     }
 
-    try {
-      final credential = await auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final uid = credential.user?.uid;
-      if (uid != null) {
-        final doc = await col.doc(uid).get();
-        if (doc.exists && doc.data() != null) {
-          final data = Map<String, dynamic>.from(doc.data()!);
-          data['id'] = doc.id;
-          return UserModel.fromJson(data);
-        }
-      }
-      return await _fallbackService.login(email: email, password: password);
-    } catch (e) {
-      debugPrint('[FirestoreAuthService] Login error, using fallback: $e');
-      return _fallbackService.login(email: email, password: password);
-    }
+    return user;
   }
 
   @override
@@ -174,7 +131,10 @@ class FirestoreAuthService implements AuthService {
     final col = _usersCol;
     if (col != null && user.id.isNotEmpty) {
       try {
-        await col.doc(user.id).set(user.toJson(), SetOptions(merge: true));
+        await col
+            .doc(user.id)
+            .set(user.toJson(), SetOptions(merge: true))
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('[FirestoreAuthService] Error updating user verification in Firestore: $e');
       }
@@ -198,7 +158,10 @@ class FirestoreAuthService implements AuthService {
     final col = _usersCol;
     if (col != null && userId.isNotEmpty) {
       try {
-        await col.doc(userId).set(user.toJson(), SetOptions(merge: true));
+        await col
+            .doc(userId)
+            .set(user.toJson(), SetOptions(merge: true))
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('[FirestoreAuthService] Error updating student ID verification: $e');
       }

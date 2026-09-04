@@ -121,19 +121,5 @@ class OfferModel {
     );
   }
 
-  static List<OfferModel> get mockOffers => [
-    OfferModel(
-      offerId: 'ofr_001',
-      itemId: 'res_001',
-      itemTitle: 'Linear Algebra & Its Applications (6th Ed)',
-      buyerId: 'user_101',
-      sellerId: 'user_102',
-      originalPrice: 35.00,
-      offeredPrice: 30.00,
-      message: 'Would you accept \$30.00 for campus pickup today at Engineering Quad?',
-      status: OfferStatus.accepted,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
-      updatedAt: DateTime.now().subtract(const Duration(minutes: 30)),
-    ),
-  ];
+  static List<OfferModel> get mockOffers => const [];
 }

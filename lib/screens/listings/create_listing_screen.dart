@@ -30,9 +30,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   String _selectedPickupSpot = AppConstants.campusPickupSpots[0];
   bool _isAvailable = true;
 
-  List<String> _images = [
-    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
-  ];
+  List<String> _images = [];
 
   bool _isSubmitting = false;
 
@@ -49,6 +47,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     final priceVal = double.tryParse(_priceController.text) ?? 0.0;
     final isFreeMode = _selectedType == AppConstants.typeDonate || _selectedType == AppConstants.typeExchange;
 
+    final List<String> finalImages = _images.isNotEmpty
+        ? _images
+        : [
+            'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
+          ];
+
     return AcademicResourceModel(
       id: 'res_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
@@ -63,9 +67,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       sellerRating: user.trustRating,
       isVerifiedSeller: user.isVerifiedStudent,
       university: user.university,
-      imageUrls: _images.isNotEmpty ? _images : ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c'],
+      imageUrls: finalImages,
       createdAt: DateTime.now(),
       isAvailable: _isAvailable,
+      isRecommended: true,
+      isNearby: true,
+      distanceMeters: 180,
       courseCode: _courseCodeController.text.trim().isNotEmpty
           ? _courseCodeController.text.trim().toUpperCase()
           : null,

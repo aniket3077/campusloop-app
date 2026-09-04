@@ -1,4 +1,5 @@
 import '../models/chat_message_model.dart';
+import 'backend_api_service.dart';
 
 /// Service interface prepared for real-time WebSocket / FCM messaging on Google Cloud backend
 abstract class ChatService {
@@ -11,77 +12,52 @@ abstract class ChatService {
 
 /// Cloud Run / WebSocket Real-time Chat Service Implementation
 class CloudRunChatService implements ChatService {
-  final List<ChatConversationModel> _conversations = List.from(ChatConversationModel.mockConversations);
-
-  final Map<String, List<ChatMessageModel>> _messages = {
-    'conv_001': [
-      ChatMessageModel(
-        id: 'msg_001',
-        conversationId: 'conv_001',
-        senderId: 'user_102',
-        senderName: 'Marcus Chen',
-        text: 'Hi Alex! The Linear Algebra textbook is still available.',
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-        isMine: false,
-      ),
-      ChatMessageModel(
-        id: 'msg_002',
-        conversationId: 'conv_001',
-        senderId: 'user_101',
-        senderName: 'Alex Rivera',
-        text: 'Great! Would you accept \$30 for campus pickup today?',
-        priceOffer: 30.0,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-        isMine: true,
-        isOffer: true,
-        offerStatus: 'ACCEPTED',
-      ),
-      ChatMessageModel(
-        id: 'msg_003',
-        conversationId: 'conv_001',
-        senderId: 'user_102',
-        senderName: 'Marcus Chen',
-        text: 'I can meet at Engineering Quad at 2 PM today!',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 25)),
-        isMine: false,
-      ),
-    ],
-    'conv_002': [
-      ChatMessageModel(
-        id: 'msg_101',
-        conversationId: 'conv_002',
-        senderId: 'user_103',
-        senderName: 'Sophia Patel',
-        text: 'Hi Alex! Offering \$5.00 for 10 days borrow of the TI-84 calculator.',
-        priceOffer: 5.0,
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        isMine: false,
-        isOffer: true,
-        offerStatus: 'PENDING',
-      ),
-    ],
-  };
+  final List<ChatConversationModel> _conversations = [];
+  final Map<String, List<ChatMessageModel>> _messages = {};
 
   @override
   Future<List<ChatConversationModel>> getConversations() async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      final remote = await BackendApiService.fetchConversations();
+      if (remote != null && remote.isNotEmpty) {
+        final list = remote.map((c) => ChatConversationModel.fromJson(c)).toList();
+        return list;
+      }
+    } catch (_) {}
     return List.from(_conversations);
   }
 
   @override
   Future<List<ChatMessageModel>> getMessages(String conversationId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      final remote = await BackendApiService.fetchMessages(conversationId);
+      if (remote != null && remote.isNotEmpty) {
+        final list = remote.map((m) => ChatMessageModel.fromJson(m)).toList();
+        return list;
+      }
+    } catch (_) {}
     return List.from(_messages[conversationId] ?? []);
   }
 
   @override
   Future<ChatMessageModel> sendMessage(String conversationId, String text, {double? priceOffer}) async {
-    await Future.delayed(const Duration(milliseconds: 150));
+    try {
+      final remote = await BackendApiService.sendMessage(
+        conversationId: conversationId,
+        text: text,
+        type: priceOffer != null ? 'OFFER' : 'TEXT',
+        metadata: priceOffer != null ? {'priceOffer': priceOffer} : null,
+      );
+      if (remote != null) {
+        return ChatMessageModel.fromJson(remote);
+      }
+    } catch (_) {}
+
     final msg = ChatMessageModel(
       id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
       conversationId: conversationId,
-      senderId: 'user_101',
-      senderName: 'Alex Rivera',
+      senderId: 'user_current',
+      senderName: 'Me',
       text: text,
       priceOffer: priceOffer,
       timestamp: DateTime.now(),

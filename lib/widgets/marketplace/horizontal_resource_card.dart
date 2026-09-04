@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/academic_resource_model.dart';
+import '../common/product_image_view.dart';
 
 class HorizontalResourceCard extends StatelessWidget {
   final AcademicResourceModel resource;
@@ -51,19 +52,14 @@ class HorizontalResourceCard extends StatelessWidget {
             // Top Image Area with Heart and Condition Badge
             Stack(
               children: [
-                Container(
-                  height: 108,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: _getItemBgColor(resource.category),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _getItemIcon(resource.title, resource.category),
-                      size: 44,
-                      color: _getItemIconColor(resource.category),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: ProductImageView(
+                    imageUrl: resource.imageUrls.isNotEmpty ? resource.imageUrls.first : null,
+                    category: resource.category,
+                    height: 108,
+                    width: double.infinity,
+                    fallbackIcon: _getItemIcon(resource.title, resource.category),
                   ),
                 ),
 
@@ -234,19 +230,14 @@ class HorizontalResourceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Area
-            Container(
-              height: 76,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: _getItemBgColor(resource.category),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-              ),
-              child: Center(
-                child: Icon(
-                  _getItemIcon(resource.title, resource.category),
-                  size: 34,
-                  color: _getItemIconColor(resource.category),
-                ),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              child: ProductImageView(
+                imageUrl: resource.imageUrls.isNotEmpty ? resource.imageUrls.first : null,
+                category: resource.category,
+                height: 76,
+                width: double.infinity,
+                fallbackIcon: _getItemIcon(resource.title, resource.category),
               ),
             ),
 
@@ -354,48 +345,6 @@ class HorizontalResourceCard extends StatelessWidget {
         return Icons.handyman_rounded;
       default:
         return Icons.category_rounded;
-    }
-  }
-
-  Color _getItemBgColor(String category) {
-    switch (category) {
-      case 'Books':
-        return const Color(0xFFEAF8EE);
-      case 'Calculators':
-        return const Color(0xFFEBF5FF);
-      case 'Drawing Kits':
-        return const Color(0xFFFFF7ED);
-      case 'Electronics':
-        return const Color(0xFFF5F3FF);
-      case 'Lab Components':
-        return const Color(0xFFFDF2F8);
-      case 'Project Materials':
-        return const Color(0xFFECFEFF);
-      case 'Tools':
-        return const Color(0xFFFFF1F2);
-      default:
-        return const Color(0xFFEFF6FF);
-    }
-  }
-
-  Color _getItemIconColor(String category) {
-    switch (category) {
-      case 'Books':
-        return const Color(0xFF16A34A);
-      case 'Calculators':
-        return const Color(0xFF0284C7);
-      case 'Drawing Kits':
-        return const Color(0xFFEA580C);
-      case 'Electronics':
-        return const Color(0xFF7C3AED);
-      case 'Lab Components':
-        return const Color(0xFFDB2777);
-      case 'Project Materials':
-        return const Color(0xFF0891B2);
-      case 'Tools':
-        return const Color(0xFFE11D48);
-      default:
-        return const Color(0xFF2563EB);
     }
   }
 }

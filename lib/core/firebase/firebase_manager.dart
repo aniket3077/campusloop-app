@@ -18,9 +18,9 @@ class FirebaseManager {
   /// Returns error string if Firebase initialization encountered an issue
   static String? get initError => _initError;
 
-  /// Firestore database instance (null if not initialized)
-  static FirebaseFirestore? get firestore =>
-      _initialized ? FirebaseFirestore.instance : null;
+  /// Firestore database instance is explicitly disabled.
+  /// The app uses Supabase PostgreSQL and Supabase S3 Storage for data persistence.
+  static FirebaseFirestore? get firestore => null;
 
   /// Firebase Auth instance (null if not initialized)
   static FirebaseAuth? get auth =>
@@ -54,23 +54,12 @@ class FirebaseManager {
       }
       _initialized = true;
       _initError = null;
-
-      // Enable offline persistence for Firestore if available
-      try {
-        FirebaseFirestore.instance.settings = const Settings(
-          persistenceEnabled: true,
-          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-        );
-      } catch (e) {
-        debugPrint('[FirebaseManager] Persistence configuration notice: $e');
-      }
-
-      debugPrint('[FirebaseManager] Firebase & Cloud Firestore initialized successfully.');
+      debugPrint('[FirebaseManager] Firebase initialized (Firestore routed to Supabase PostgreSQL).');
       return true;
     } catch (e, st) {
       _initialized = false;
       _initError = e.toString();
-      debugPrint('[FirebaseManager] Firebase initialization notice (falling back to local mock): $e\n$st');
+      debugPrint('[FirebaseManager] Firebase initialization notice: $e\n$st');
       return false;
     }
   }

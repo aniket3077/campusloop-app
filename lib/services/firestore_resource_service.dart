@@ -184,10 +184,10 @@ class FirestoreResourceService implements ResourceService {
       }).toList();
     }
 
-    if (minPrice != null) {
+    if (minPrice != null && minPrice > 0) {
       items = items.where((item) => item.price >= minPrice).toList();
     }
-    if (maxPrice != null && maxPrice < 200) {
+    if (maxPrice != null && maxPrice < 5000) {
       items = items.where((item) => item.price <= maxPrice).toList();
     }
 

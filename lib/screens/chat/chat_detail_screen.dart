@@ -56,8 +56,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    final chatProvider = AppStateProvider.of(context).chatProvider;
-    chatProvider.sendMessage(widget.conversationId, text);
+    final appState = AppStateProvider.of(context);
+    final currentUser = appState.authProvider.user;
+    appState.chatProvider.sendMessage(
+      widget.conversationId,
+      text,
+      senderId: currentUser?.id,
+      senderName: currentUser?.name,
+    );
     _textController.clear();
     _scrollToBottom();
   }

@@ -108,57 +108,5 @@ class DigitalProductModel {
     };
   }
 
-  static List<DigitalProductModel> get mockDigitalProducts => [
-    DigitalProductModel(
-      id: 'dig_001',
-      courseName: 'CS 106B: Programming Abstractions',
-      providerPlatform: 'Canvas / Publisher Store',
-      productType: DigitalProductType.accessCode,
-      validityExpiry: 'Valid through June 30, 2027',
-      price: 25.00,
-      description: 'Unused official access activation code for online interactive C++ labs. Purchased directly from publisher store.',
-      isOwnershipVerified: true,
-      sellerId: 'user_102',
-      sellerName: 'Marcus Chen',
-      sellerRating: 4.95,
-      isVerifiedSeller: true,
-      university: 'Stanford University',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      secureAccessCode: 'PEARSON-CS106B-84920-X82',
-    ),
-    DigitalProductModel(
-      id: 'dig_002',
-      courseName: 'Math 51: Linear Algebra & Multivariable Calculus',
-      providerPlatform: 'McGraw-Hill Connect',
-      productType: DigitalProductType.voucher,
-      validityExpiry: 'Valid through Dec 31, 2026',
-      price: 20.00,
-      description: 'Official Student Voucher for homework portal access. Code receipt verified.',
-      isOwnershipVerified: true,
-      sellerId: 'user_103',
-      sellerName: 'Sophia Patel',
-      sellerRating: 4.88,
-      isVerifiedSeller: true,
-      university: 'Stanford University',
-      createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      secureAccessCode: 'MH-CONNECT-MATH51-9920',
-    ),
-    DigitalProductModel(
-      id: 'dig_003',
-      courseName: 'Chem 31A: Chemical Principles',
-      providerPlatform: 'WileyPLUS',
-      productType: DigitalProductType.studyNotes,
-      validityExpiry: 'Lifetime Access',
-      price: 15.00,
-      description: 'Comprehensive digitized lecture summaries, reaction mechanisms cheatsheets, and worked practice midterm solutions.',
-      isOwnershipVerified: true,
-      sellerId: 'user_101',
-      sellerName: 'Alex Rivera',
-      sellerRating: 4.90,
-      isVerifiedSeller: true,
-      university: 'Stanford University',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      secureAccessCode: 'CAMPUSLOOP-CHEM31A-NOTES-PDF',
-    ),
-  ];
+  static List<DigitalProductModel> get mockDigitalProducts => const [];
 }

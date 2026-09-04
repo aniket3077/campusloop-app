@@ -69,9 +69,11 @@ class WelcomeHeroCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Welcome back, Aniket! 👋
+                      // Welcome back greeting
                       Text(
-                        'Welcome back, $userName! 👋',
+                        userName == 'Campus Student' || userName.isEmpty
+                            ? 'Welcome to CampusLoop! 👋'
+                            : 'Welcome back, $userName! 👋',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 17,

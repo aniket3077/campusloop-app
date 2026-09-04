@@ -153,11 +153,11 @@ class ChatConversationModel {
   factory ChatConversationModel.fromJson(Map<String, dynamic> json) {
     return ChatConversationModel(
       id: json['id'] as String? ?? '',
-      resourceId: json['resourceId'] as String? ?? '',
-      resourceTitle: json['resourceTitle'] as String? ?? '',
-      resourceType: json['resourceType'] as String? ?? 'SELL',
-      resourcePrice: (json['resourcePrice'] as num?)?.toDouble() ?? 0.0,
-      resourceImageUrl: json['resourceImageUrl'] as String?,
+      resourceId: (json['resourceId'] ?? json['itemId']) as String? ?? '',
+      resourceTitle: (json['resourceTitle'] ?? json['itemTitle']) as String? ?? '',
+      resourceType: (json['resourceType'] ?? json['itemCategory']) as String? ?? 'SELL',
+      resourcePrice: ((json['resourcePrice'] ?? json['itemPrice']) as num?)?.toDouble() ?? 0.0,
+      resourceImageUrl: (json['resourceImageUrl'] ?? json['itemImageUrl']) as String?,
       participant: json['participant'] != null
           ? ParticipantModel.fromJson(Map<String, dynamic>.from(json['participant'] as Map))
           : const ParticipantModel(
@@ -215,82 +215,5 @@ class ChatConversationModel {
     );
   }
 
-  static List<ChatConversationModel> get mockConversations => [
-    ChatConversationModel(
-      id: 'conv_001',
-      resourceId: 'res_rec_01',
-      resourceTitle: 'Engineering Mechanics',
-      resourceType: 'SELL',
-      resourcePrice: 250.00,
-      resourceImageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
-      participant: const ParticipantModel(
-        id: 'user_102',
-        name: 'John Doe',
-        university: 'Stanford University',
-        department: 'Mechanical Engineering',
-        isVerifiedStudent: true,
-        trustRating: 4.8,
-      ),
-      lastMessage: 'I can meet at Engineering Quad at 2 PM today!',
-      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 25)),
-      unreadCount: 1,
-    ),
-    ChatConversationModel(
-      id: 'conv_002',
-      resourceId: 'res_rec_02',
-      resourceTitle: 'Scientific Calculator (Casio fx-991EX)',
-      resourceType: 'BORROW',
-      resourcePrice: 50.00,
-      resourceImageUrl: 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd',
-      participant: const ParticipantModel(
-        id: 'user_103',
-        name: 'Priya Sharma',
-        university: 'Stanford University',
-        department: 'Electrical Engineering',
-        isVerifiedStudent: true,
-        trustRating: 4.7,
-      ),
-      lastMessage: 'Is the calculator available for next week\'s MATH 51 midterm?',
-      lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
-      unreadCount: 2,
-    ),
-    ChatConversationModel(
-      id: 'conv_003',
-      resourceId: 'res_near_01',
-      resourceTitle: 'Engineering Drawing Book',
-      resourceType: 'SELL',
-      resourcePrice: 200.00,
-      resourceImageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
-      participant: const ParticipantModel(
-        id: 'user_106',
-        name: 'Aarav Patel',
-        university: 'Stanford University',
-        department: 'Civil & Environmental',
-        isVerifiedStudent: true,
-        trustRating: 4.9,
-      ),
-      lastMessage: 'Thank you Aniket! Got the book and rated 5 stars.',
-      lastMessageTime: DateTime.now().subtract(const Duration(hours: 4)),
-      unreadCount: 0,
-    ),
-    ChatConversationModel(
-      id: 'conv_004',
-      resourceId: 'res_demo_05',
-      resourceTitle: 'Electronics Prototyping Sensor Kit',
-      resourceType: 'EXCHANGE',
-      resourcePrice: 0.00,
-      resourceImageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475',
-      participant: const ParticipantModel(
-        id: 'user_105',
-        name: 'Siddhant U.',
-        university: 'Stanford University',
-        department: 'Computer Science',
-        isVerifiedStudent: true,
-        trustRating: 4.6,
-      ),
-      lastMessage: 'I have the ESP32 board ready to swap whenever you are free.',
-      lastMessageTime: DateTime.now().subtract(const Duration(hours: 8)),
-      unreadCount: 0,
-    ),
-  ];
+  static List<ChatConversationModel> get mockConversations => const [];
 }

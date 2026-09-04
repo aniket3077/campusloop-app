@@ -69,7 +69,7 @@ class FirestoreSeeder {
         debugPrint('[FirestoreSeeder] Seeded default user profile.');
       }
     } catch (e) {
-      debugPrint('[FirestoreSeeder] Notice during seeding: $e');
+      debugPrint('[FirestoreSeeder] Cloud Firestore not enabled or offline, skipping Firestore seed: $e');
     }
   }
 

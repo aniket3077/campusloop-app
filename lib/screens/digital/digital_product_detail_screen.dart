@@ -62,7 +62,7 @@ class _DigitalProductDetailScreenState extends State<DigitalProductDetailScreen>
   }
 
   void _openOffer() {
-    final mockResource = AcademicResourceModel(
+    final digitalAsResource = AcademicResourceModel(
       id: widget.product.id,
       title: widget.product.courseName,
       description: widget.product.description,
@@ -80,7 +80,7 @@ class _DigitalProductDetailScreenState extends State<DigitalProductDetailScreen>
       createdAt: DateTime.now(),
     );
 
-    MakeOfferBottomSheet.show(context, mockResource);
+    MakeOfferBottomSheet.show(context, digitalAsResource);
   }
 
   @override

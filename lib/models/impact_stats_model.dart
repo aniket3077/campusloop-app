@@ -34,10 +34,10 @@ class ImpactStatsModel {
   }
 
   static const ImpactStatsModel mockCampusImpact = ImpactStatsModel(
-    co2SavedKg: 1240.5,
-    itemsReused: 486,
-    moneySavedUsd: 14250.00,
-    treesSavedEquivalent: 58,
-    activeCampusBorrowers: 320,
+    co2SavedKg: 0.0,
+    itemsReused: 0,
+    moneySavedUsd: 0.0,
+    treesSavedEquivalent: 0,
+    activeCampusBorrowers: 0,
   );
 }

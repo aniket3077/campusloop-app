@@ -10,7 +10,7 @@ abstract class DigitalProductService {
 
 /// Cloud Run Digital Product Service Implementation Driver
 class CloudRunDigitalProductService implements DigitalProductService {
-  final List<DigitalProductModel> _products = List.from(DigitalProductModel.mockDigitalProducts);
+  final List<DigitalProductModel> _products = [];
 
   static const String digitalEndpoint = '/api/v1/digital-products';
 
