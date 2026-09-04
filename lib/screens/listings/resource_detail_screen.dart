@@ -400,17 +400,19 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                               child: CustomButton(
                                 text: 'Chat with Buyers',
                                 icon: Icons.chat_bubble_rounded,
-                                onPressed: () {
-                                  final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                onPressed: () async {
+                                  final conversation = await appState.chatProvider.ensureConversationOnBackend(
                                     resource: res,
                                     currentUser: currentUser,
                                     asSeller: true,
                                   );
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.chatDetail,
-                                    arguments: conversation.id,
-                                  );
+                                  if (context.mounted) {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.chatDetail,
+                                      arguments: conversation.id,
+                                    );
+                                  }
                                 },
                               ),
                             ),
@@ -465,16 +467,18 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                           Expanded(
                             child: CustomButton(
                               text: 'Chat with Seller',
-                              onPressed: () {
-                                final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                              onPressed: () async {
+                                final conversation = await appState.chatProvider.ensureConversationOnBackend(
                                   resource: res,
                                   currentUser: currentUser,
                                 );
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.chatDetail,
-                                  arguments: conversation.id,
-                                );
+                                if (context.mounted) {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.chatDetail,
+                                    arguments: conversation.id,
+                                  );
+                                }
                               },
                               isOutlined: true,
                               icon: Icons.chat_bubble_outline_rounded,
@@ -484,32 +488,34 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                           Expanded(
                             child: CustomButton(
                               text: _getActionText(res.resourceType),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (res.resourceType.toUpperCase() == 'DONATE') {
-                                  final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                  final conversation = await appState.chatProvider.ensureConversationOnBackend(
                                     resource: res,
                                     currentUser: currentUser,
                                   );
                                   final claimMsg = 'Hi ${res.sellerName}! I would love to claim your donated item: "${res.title}". When can we meet at ${res.pickupLocation}?';
-                                  appState.chatProvider.sendMessage(
+                                  await appState.chatProvider.sendMessage(
                                     conversation.id,
                                     claimMsg,
                                     senderId: currentUser?.id,
                                     senderName: currentUser?.name,
                                   );
-                                  appState.notificationProvider.notifyMessageSentToSeller(
-                                    context: context,
-                                    conversationId: conversation.id,
-                                    sellerName: res.sellerName,
-                                    itemTitle: res.title,
-                                    itemId: res.id,
-                                    messageText: claimMsg,
-                                  );
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.chatDetail,
-                                    arguments: conversation.id,
-                                  );
+                                  if (context.mounted) {
+                                    appState.notificationProvider.notifyMessageSentToSeller(
+                                      context: context,
+                                      conversationId: conversation.id,
+                                      sellerName: res.sellerName,
+                                      itemTitle: res.title,
+                                      itemId: res.id,
+                                      messageText: claimMsg,
+                                    );
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.chatDetail,
+                                      arguments: conversation.id,
+                                    );
+                                  }
                                 } else {
                                   MakeOfferBottomSheet.show(context, res);
                                 }

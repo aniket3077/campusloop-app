@@ -419,8 +419,14 @@ class BackendApiService {
   /// Fetch conversations from Supabase PostgreSQL backend
   static Future<List<Map<String, dynamic>>?> fetchConversations() async {
     try {
+      final token = await ensureAuthenticated();
+      if (token == null) {
+        debugPrint('[BackendApiService] fetchConversations: user not authenticated');
+        return null;
+      }
       final url = Uri.parse('$baseUrl/conversations');
       final response = await http.get(url, headers: _headers).timeout(const Duration(seconds: 5));
+      debugPrint('[BackendApiService] fetchConversations: status ${response.statusCode}');
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list.cast<Map<String, dynamic>>();
@@ -435,22 +441,29 @@ class BackendApiService {
   static Future<Map<String, dynamic>?> createConversation({
     required String sellerId,
     String? itemId,
+    String? initialMessage,
   }) async {
     try {
+      await ensureAuthenticated();
       final url = Uri.parse('$baseUrl/conversations');
+      final payload = <String, dynamic>{
+        'sellerId': sellerId,
+        'itemId': ?itemId,
+        'initialMessage': ?initialMessage,
+      };
       final response = await http
           .post(
             url,
             headers: _headers,
-            body: jsonEncode({
-              'sellerId': sellerId,
-              'itemId': ?itemId,
-            }),
+            body: jsonEncode(payload),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 8));
 
+      debugPrint('[BackendApiService] createConversation status: ${response.statusCode}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        debugPrint('[BackendApiService] createConversation error: ${response.body}');
       }
     } catch (e) {
       debugPrint('[BackendApiService] createConversation notice: $e');
@@ -461,6 +474,7 @@ class BackendApiService {
   /// Fetch messages for a conversation from Supabase PostgreSQL backend
   static Future<List<Map<String, dynamic>>?> fetchMessages(String conversationId) async {
     try {
+      await ensureAuthenticated();
       final url = Uri.parse('$baseUrl/conversations/$conversationId/messages');
       final response = await http.get(url, headers: _headers).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
@@ -479,23 +493,32 @@ class BackendApiService {
     required String text,
     String? type,
     Map<String, dynamic>? metadata,
+    String? itemId,
+    String? sellerId,
   }) async {
     try {
+      await ensureAuthenticated();
       final url = Uri.parse('$baseUrl/conversations/$conversationId/messages');
+      final payload = <String, dynamic>{
+        'text': text,
+        'type': ?type,
+        'metadata': ?metadata,
+        'itemId': ?itemId,
+        'sellerId': ?sellerId,
+      };
       final response = await http
           .post(
             url,
             headers: _headers,
-            body: jsonEncode({
-              'text': text,
-              'type': ?type,
-              'metadata': ?metadata,
-            }),
+            body: jsonEncode(payload),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 8));
 
+      debugPrint('[BackendApiService] sendMessage status: ${response.statusCode}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        debugPrint('[BackendApiService] sendMessage error: ${response.body}');
       }
     } catch (e) {
       debugPrint('[BackendApiService] sendMessage notice: $e');

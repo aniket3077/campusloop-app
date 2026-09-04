@@ -21,12 +21,13 @@ class ParticipantModel {
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
     return ParticipantModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      university: json['university'] as String? ?? 'Stanford University',
-      department: json['department'] as String? ?? 'Computer Science',
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? 'Campus Student').toString(),
+      university: (json['university'] ?? 'MIT CSN').toString(),
+      department: (json['department'] ?? 'Student').toString(),
       avatarUrl: json['avatarUrl'] as String?,
-      isVerifiedStudent: json['isVerifiedStudent'] as bool? ?? true,
+      isVerifiedStudent: (json['isVerifiedStudent'] as bool?) ??
+          (json['verificationStatus'] == 'VERIFIED'),
       trustRating: (json['trustRating'] as num?)?.toDouble() ?? 5.0,
       isBlocked: json['isBlocked'] as bool? ?? false,
     );
@@ -87,17 +88,31 @@ class ChatMessageModel {
   });
 
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] is Map ? (json['metadata'] as Map) : null;
+    final priceOfferVal = (json['priceOffer'] as num?)?.toDouble() ??
+        (meta != null && meta['priceOffer'] != null ? (meta['priceOffer'] as num).toDouble() : null) ??
+        (meta != null && meta['offeredPrice'] != null ? (meta['offeredPrice'] as num).toDouble() : null);
+
+    final isOfferVal = (json['isOffer'] as bool?) ??
+        (json['type'] == 'OFFER' || priceOfferVal != null);
+
+    final offerStatusVal = (json['offerStatus'] as String?) ??
+        (meta != null && meta['status'] != null ? meta['status'].toString() : null) ??
+        (isOfferVal ? 'PENDING' : null);
+
     return ChatMessageModel(
-      id: json['id'] as String,
-      conversationId: json['conversationId'] as String,
-      senderId: json['senderId'] as String,
-      senderName: json['senderName'] as String,
-      text: json['text'] as String,
-      priceOffer: (json['priceOffer'] as num?)?.toDouble(),
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      isMine: json['isMine'] as bool? ?? false,
-      isOffer: json['isOffer'] as bool? ?? false,
-      offerStatus: json['offerStatus'] as String?,
+      id: (json['id'] ?? '').toString(),
+      conversationId: (json['conversationId'] ?? '').toString(),
+      senderId: (json['senderId'] ?? '').toString(),
+      senderName: (json['senderName'] ?? (json['isMe'] == true ? 'Me' : 'Student')).toString(),
+      text: (json['text'] ?? '').toString(),
+      priceOffer: priceOfferVal,
+      timestamp: json['timestamp'] != null
+          ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      isMine: json['isMine'] as bool? ?? json['isMe'] as bool? ?? false,
+      isOffer: isOfferVal,
+      offerStatus: offerStatusVal,
       isRead: json['isRead'] as bool? ?? true,
     );
   }
@@ -152,25 +167,25 @@ class ChatConversationModel {
 
   factory ChatConversationModel.fromJson(Map<String, dynamic> json) {
     return ChatConversationModel(
-      id: json['id'] as String? ?? '',
+      id: (json['id'] ?? '').toString(),
       resourceId: (json['resourceId'] ?? json['itemId']) as String? ?? '',
-      resourceTitle: (json['resourceTitle'] ?? json['itemTitle']) as String? ?? '',
-      resourceType: (json['resourceType'] ?? json['itemCategory']) as String? ?? 'SELL',
+      resourceTitle: (json['resourceTitle'] ?? json['itemTitle']) as String? ?? 'Campus Item',
+      resourceType: (json['resourceType'] ?? json['itemCategory'] ?? json['transactionType']) as String? ?? 'SELL',
       resourcePrice: ((json['resourcePrice'] ?? json['itemPrice']) as num?)?.toDouble() ?? 0.0,
       resourceImageUrl: (json['resourceImageUrl'] ?? json['itemImageUrl']) as String?,
       participant: json['participant'] != null
           ? ParticipantModel.fromJson(Map<String, dynamic>.from(json['participant'] as Map))
-          : const ParticipantModel(
-              id: 'user_unknown',
-              name: 'Campus User',
-              university: 'Campus University',
-              department: 'General',
-              isVerifiedStudent: true,
+          : ParticipantModel(
+              id: (json['otherParticipantId'] ?? 'user_student').toString(),
+              name: (json['otherParticipantName'] ?? 'Campus Student').toString(),
+              university: 'MIT CSN',
+              department: 'Student',
+              isVerifiedStudent: json['isVerifiedStudent'] as bool? ?? true,
               trustRating: 5.0,
             ),
-      lastMessage: json['lastMessage'] as String? ?? '',
+      lastMessage: (json['lastMessage'] ?? '').toString(),
       lastMessageTime: json['lastMessageTime'] != null
-          ? DateTime.tryParse(json['lastMessageTime'] as String) ?? DateTime.now()
+          ? DateTime.tryParse(json['lastMessageTime'].toString()) ?? DateTime.now()
           : DateTime.now(),
       unreadCount: json['unreadCount'] as int? ?? 0,
       isBlocked: json['isBlocked'] as bool? ?? false,

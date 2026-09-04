@@ -62,7 +62,7 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
     final offerPrice = double.tryParse(_offerPriceController.text);
 
     // Dynamically get or create conversation with the seller of this resource
-    final conversation = chatProvider.getOrCreateConversationForResource(
+    final conversation = await chatProvider.ensureConversationOnBackend(
       resource: widget.resource,
       currentUser: currentUser,
     );

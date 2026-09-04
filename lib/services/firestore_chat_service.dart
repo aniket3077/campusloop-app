@@ -74,14 +74,35 @@ class FirestoreChatService implements ChatService {
   }
 
   @override
+  Future<ChatConversationModel?> createConversation({
+    required String sellerId,
+    String? itemId,
+    String? initialMessage,
+  }) async {
+    return _fallbackService.createConversation(
+      sellerId: sellerId,
+      itemId: itemId,
+      initialMessage: initialMessage,
+    );
+  }
+
+  @override
   Future<ChatMessageModel> sendMessage(
     String conversationId,
     String text, {
     double? priceOffer,
+    String? itemId,
+    String? sellerId,
   }) async {
     final col = _chatsCol;
     if (col == null) {
-      return _fallbackService.sendMessage(conversationId, text, priceOffer: priceOffer);
+      return _fallbackService.sendMessage(
+        conversationId,
+        text,
+        priceOffer: priceOffer,
+        itemId: itemId,
+        sellerId: sellerId,
+      );
     }
 
     try {
@@ -119,7 +140,13 @@ class FirestoreChatService implements ChatService {
       return msg;
     } catch (e) {
       debugPrint('[FirestoreChatService] Error sending message: $e');
-      return _fallbackService.sendMessage(conversationId, text, priceOffer: priceOffer);
+      return _fallbackService.sendMessage(
+        conversationId,
+        text,
+        priceOffer: priceOffer,
+        itemId: itemId,
+        sellerId: sellerId,
+      );
     }
   }
 

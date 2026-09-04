@@ -1,15 +1,25 @@
 import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
-import '../services/firestore_chat_service.dart';
 
 class ChatRepository {
   final ChatService _chatService;
 
   ChatRepository({ChatService? chatService})
-      : _chatService = chatService ?? FirestoreChatService();
+      : _chatService = chatService ?? CloudRunChatService();
 
   Future<List<ChatConversationModel>> getConversations() =>
       _chatService.getConversations();
+
+  Future<ChatConversationModel?> createConversation({
+    required String sellerId,
+    String? itemId,
+    String? initialMessage,
+  }) =>
+      _chatService.createConversation(
+        sellerId: sellerId,
+        itemId: itemId,
+        initialMessage: initialMessage,
+      );
 
   Future<List<ChatMessageModel>> getMessages(String conversationId) =>
       _chatService.getMessages(conversationId);
@@ -18,8 +28,16 @@ class ChatRepository {
     String conversationId,
     String text, {
     double? priceOffer,
+    String? itemId,
+    String? sellerId,
   }) =>
-      _chatService.sendMessage(conversationId, text, priceOffer: priceOffer);
+      _chatService.sendMessage(
+        conversationId,
+        text,
+        priceOffer: priceOffer,
+        itemId: itemId,
+        sellerId: sellerId,
+      );
 
   Future<bool> blockUser(String conversationId, String userId) =>
       _chatService.blockUser(conversationId, userId);

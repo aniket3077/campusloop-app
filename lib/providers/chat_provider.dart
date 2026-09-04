@@ -25,10 +25,7 @@ class ChatProvider extends ChangeNotifier {
     try {
       final remoteConvs = await _repository.getConversations();
       if (remoteConvs.isNotEmpty) {
-        // Merge with any locally initiated conversations
-        final existingIds = remoteConvs.map((c) => c.id).toSet();
-        final localOnly = _conversations.where((c) => !existingIds.contains(c.id)).toList();
-        _conversations = [...localOnly, ...remoteConvs];
+        _conversations = remoteConvs;
       }
     } catch (_) {
       // Keep local conversations on error
@@ -44,7 +41,9 @@ class ChatProvider extends ChangeNotifier {
 
   ChatConversationModel? getConversationById(String conversationId) {
     try {
-      return _conversations.firstWhere((c) => c.id == conversationId);
+      return _conversations.firstWhere(
+        (c) => c.id == conversationId || (c.resourceId.isNotEmpty && c.resourceId == conversationId),
+      );
     } catch (_) {
       return null;
     }
@@ -58,6 +57,49 @@ class ChatProvider extends ChangeNotifier {
       _conversations[idx] = _conversations[idx].copyWith(unreadCount: 0);
       notifyListeners();
     }
+  }
+
+  /// Ensures conversation exists on backend and returns the real model
+  Future<ChatConversationModel> ensureConversationOnBackend({
+    required AcademicResourceModel resource,
+    UserModel? currentUser,
+    bool asSeller = false,
+  }) async {
+    // 1. Check if real conversation for this resource already exists
+    final existing = _conversations.where(
+      (c) => c.resourceId == resource.id && !c.id.startsWith('conv_'),
+    ).firstOrNull;
+    if (existing != null) {
+      return existing;
+    }
+
+    try {
+      final remote = await _repository.createConversation(
+        sellerId: resource.sellerId,
+        itemId: resource.id,
+      );
+      if (remote != null) {
+        final idx = _conversations.indexWhere(
+          (c) => c.id == remote.id || (resource.id.isNotEmpty && c.resourceId == resource.id),
+        );
+        if (idx != -1) {
+          _conversations[idx] = remote;
+        } else {
+          _conversations.insert(0, remote);
+        }
+        notifyListeners();
+        return remote;
+      }
+    } catch (e) {
+      debugPrint('[ChatProvider] ensureConversationOnBackend error: $e');
+    }
+
+    // 2. Fallback to local conversation
+    return getOrCreateConversationForResource(
+      resource: resource,
+      currentUser: currentUser,
+      asSeller: asSeller,
+    );
   }
 
   /// Automatically connects buyer to seller for a specific listing
@@ -80,12 +122,12 @@ class ChatProvider extends ChangeNotifier {
 
     final participant = isUserSeller
         ? const ParticipantModel(
-            id: 'buyer_sophia',
-            name: 'Sophia Patel (Buyer)',
-            university: 'Stanford University',
-            department: 'Computer Science',
+            id: 'buyer_student',
+            name: 'Campus Buyer',
+            university: 'MIT CSN',
+            department: 'Student',
             isVerifiedStudent: true,
-            trustRating: 4.9,
+            trustRating: 5.0,
           )
         : ParticipantModel(
             id: resource.sellerId,
@@ -129,7 +171,72 @@ class ChatProvider extends ChangeNotifier {
     ];
 
     notifyListeners();
+
+    // Asynchronously create/resolve on backend and replace convId with real UUID
+    _syncConversationWithBackend(resource: resource, tempId: convId, initialMessage: initialText);
+
     return newConv;
+  }
+
+  void _syncConversationWithBackend({
+    required AcademicResourceModel resource,
+    required String tempId,
+    String? initialMessage,
+  }) async {
+    try {
+      final remote = await _repository.createConversation(
+        sellerId: resource.sellerId,
+        itemId: resource.id,
+        initialMessage: initialMessage,
+      );
+      if (remote != null && remote.id != tempId) {
+        _replaceConversationId(tempId, remote.id, remoteConv: remote);
+      }
+    } catch (e) {
+      debugPrint('[ChatProvider] _syncConversationWithBackend notice: $e');
+    }
+  }
+
+  void _replaceConversationId(String oldId, String newId, {ChatConversationModel? remoteConv}) {
+    final idx = _conversations.indexWhere((c) => c.id == oldId);
+    if (idx != -1) {
+      final old = _conversations[idx];
+      _conversations[idx] = remoteConv ??
+          ChatConversationModel(
+            id: newId,
+            resourceId: old.resourceId,
+            resourceTitle: old.resourceTitle,
+            resourceType: old.resourceType,
+            resourcePrice: old.resourcePrice,
+            resourceImageUrl: old.resourceImageUrl,
+            participant: old.participant,
+            lastMessage: old.lastMessage,
+            lastMessageTime: old.lastMessageTime,
+            unreadCount: old.unreadCount,
+            isBlocked: old.isBlocked,
+          );
+    }
+    if (_conversationMessages.containsKey(oldId)) {
+      final oldMsgs = _conversationMessages.remove(oldId)!;
+      final existingNew = _conversationMessages[newId] ?? [];
+      _conversationMessages[newId] = [
+        ...existingNew,
+        ...oldMsgs.map((m) => ChatMessageModel(
+              id: m.id,
+              conversationId: newId,
+              senderId: m.senderId,
+              senderName: m.senderName,
+              text: m.text,
+              priceOffer: m.priceOffer,
+              timestamp: m.timestamp,
+              isMine: m.isMine,
+              isOffer: m.isOffer,
+              offerStatus: m.offerStatus,
+              isRead: m.isRead,
+            )),
+      ];
+    }
+    notifyListeners();
   }
 
   Future<void> loadMessages(String conversationId) async {
@@ -171,17 +278,32 @@ class ChatProvider extends ChangeNotifier {
 
     // Update conversation preview in list
     final idx = _conversations.indexWhere((c) => c.id == conversationId);
+    String? resolvedItemId;
+    String? resolvedSellerId;
     if (idx != -1) {
       _conversations[idx] = _conversations[idx].copyWith(
         lastMessage: text,
         lastMessageTime: DateTime.now(),
       );
+      resolvedItemId = _conversations[idx].resourceId;
+      resolvedSellerId = _conversations[idx].participant.id;
     }
     notifyListeners();
 
     // 2. Persist in background without blocking UI
     try {
-      await _repository.sendMessage(conversationId, text, priceOffer: priceOffer);
+      final remoteMsg = await _repository.sendMessage(
+        conversationId,
+        text,
+        priceOffer: priceOffer,
+        itemId: resolvedItemId,
+        sellerId: resolvedSellerId,
+      );
+
+      // If backend returned a different real conversationId than the temporary client id
+      if (remoteMsg.conversationId.isNotEmpty && remoteMsg.conversationId != conversationId) {
+        _replaceConversationId(conversationId, remoteMsg.conversationId);
+      }
     } catch (_) {}
   }
 
