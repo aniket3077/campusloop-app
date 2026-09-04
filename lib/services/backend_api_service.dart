@@ -189,4 +189,84 @@ class BackendApiService {
     } catch (_) {}
     return [];
   }
+
+  /// Upload product image to Supabase S3 via backend upload route
+  static Future<String?> uploadImage({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl/upload');
+      final request = http.MultipartRequest('POST', url);
+
+      if (_authToken != null) {
+        request.headers['Authorization'] = 'Bearer $_authToken';
+      }
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        fileBytes,
+        filename: fileName,
+      ));
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 10));
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['url'] as String?;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Fetch product listings live from backend API (Cloud Run + Supabase)
+  static Future<List<Map<String, dynamic>>?> fetchItems({
+    String? category,
+    String? transactionType,
+    String? searchQuery,
+    String? courseCode,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (category != null && category != 'All' && category != 'All Categories') {
+        queryParams['category'] = category;
+      }
+      if (transactionType != null && transactionType != 'All Types') {
+        queryParams['transactionType'] = transactionType;
+      }
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        queryParams['search'] = searchQuery.trim();
+      }
+      if (courseCode != null && courseCode != 'All' && courseCode != 'All Courses') {
+        queryParams['courseCode'] = courseCode;
+      }
+
+      final uri = Uri.parse('$baseUrl/items').replace(
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      final response = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Create product listing on backend API (Supabase PostgreSQL via Prisma)
+  static Future<Map<String, dynamic>?> createItem(Map<String, dynamic> itemData) async {
+    try {
+      final url = Uri.parse('$baseUrl/items');
+      final response = await http
+          .post(url, headers: _headers, body: jsonEncode(itemData))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
 }

@@ -3,6 +3,7 @@ import '../../core/navigation/app_routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/academic_resource_model.dart';
 import '../../models/report_model.dart';
+import '../../providers/app_state_provider.dart';
 import '../../widgets/common/campus_badge.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/resource_type_chip.dart';
@@ -381,10 +382,16 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                               child: CustomButton(
                                 text: 'Chat with Owner',
                                 onPressed: () {
+                                  final appState = AppStateProvider.of(context);
+                                  final currentUser = appState.authProvider.user;
+                                  final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                    resource: res,
+                                    currentUser: currentUser,
+                                  );
                                   Navigator.pushNamed(
                                     context,
                                     AppRoutes.chatDetail,
-                                    arguments: 'conv_001',
+                                    arguments: conversation.id,
                                   );
                                 },
                                 isOutlined: true,
@@ -394,11 +401,29 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: CustomButton(
-                                text: 'Make Offer',
+                                text: _getActionText(res.resourceType),
                                 onPressed: () {
-                                  MakeOfferBottomSheet.show(context, res);
+                                  if (res.resourceType.toUpperCase() == 'DONATE') {
+                                    final appState = AppStateProvider.of(context);
+                                    final currentUser = appState.authProvider.user;
+                                    final conversation = appState.chatProvider.getOrCreateConversationForResource(
+                                      resource: res,
+                                      currentUser: currentUser,
+                                    );
+                                    appState.chatProvider.sendMessage(
+                                      conversation.id,
+                                      'Hi ${res.sellerName}! I would love to claim your donated item: "${res.title}". When can we meet at ${res.pickupLocation}?',
+                                    );
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.chatDetail,
+                                      arguments: conversation.id,
+                                    );
+                                  } else {
+                                    MakeOfferBottomSheet.show(context, res);
+                                  }
                                 },
-                                icon: Icons.handshake_outlined,
+                                icon: _getActionIcon(res.resourceType),
                               ),
                             ),
                           ],
@@ -452,6 +477,34 @@ class _ResourceDetailScreenState extends State<ResourceDetailScreen> {
         return Icons.build_rounded;
       default:
         return Icons.category_rounded;
+    }
+  }
+
+  String _getActionText(String type) {
+    switch (type.toUpperCase()) {
+      case 'DONATE':
+        return 'Claim Free Item';
+      case 'BORROW':
+        return 'Request to Borrow';
+      case 'EXCHANGE':
+        return 'Propose Exchange';
+      case 'BUY':
+        return 'Offer to Supply';
+      default:
+        return 'Make Offer';
+    }
+  }
+
+  IconData _getActionIcon(String type) {
+    switch (type.toUpperCase()) {
+      case 'DONATE':
+        return Icons.favorite_rounded;
+      case 'BORROW':
+        return Icons.handshake_rounded;
+      case 'EXCHANGE':
+        return Icons.published_with_changes_rounded;
+      default:
+        return Icons.handshake_outlined;
     }
   }
 }

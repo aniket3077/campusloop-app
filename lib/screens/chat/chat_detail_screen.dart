@@ -21,19 +21,35 @@ class ChatDetailScreen extends StatefulWidget {
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _textController = TextEditingController();
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppStateProvider.of(context).chatProvider.loadMessages(widget.conversationId);
+      AppStateProvider.of(context).chatProvider.loadMessages(widget.conversationId).then((_) {
+        _scrollToBottom();
+      });
     });
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _sendMessage() {
@@ -43,6 +59,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final chatProvider = AppStateProvider.of(context).chatProvider;
     chatProvider.sendMessage(widget.conversationId, text);
     _textController.clear();
+    _scrollToBottom();
   }
 
   void _openOfferDialog(String itemId, String title, double originalPrice) {
@@ -209,6 +226,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               // Message List
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {

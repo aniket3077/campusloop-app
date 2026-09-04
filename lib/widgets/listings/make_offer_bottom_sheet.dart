@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/navigation/app_routes.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/academic_resource_model.dart';
 import '../../providers/app_state_provider.dart';
 
@@ -56,14 +57,21 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
     setState(() => _isSubmitting = false);
     Navigator.pop(context); // Close bottom sheet
 
-    // Send offer message in chat
-    final chatProvider = AppStateProvider.of(context).chatProvider;
+    final appState = AppStateProvider.of(context);
+    final chatProvider = appState.chatProvider;
+    final currentUser = appState.authProvider.user;
     final offerPrice = double.tryParse(_offerPriceController.text);
 
+    // Dynamically get or create conversation with the seller of this resource
+    final conversation = chatProvider.getOrCreateConversationForResource(
+      resource: widget.resource,
+      currentUser: currentUser,
+    );
+
     await chatProvider.sendMessage(
-      'conv_001',
+      conversation.id,
       _messageController.text.trim().isEmpty
-          ? 'Proposing price offer for ${widget.resource.title}'
+          ? 'Proposing price offer of ₹${offerPrice?.toStringAsFixed(0)} for ${widget.resource.title}'
           : _messageController.text.trim(),
       priceOffer: offerPrice,
     );
@@ -71,11 +79,11 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Bargain offer of \$${offerPrice?.toStringAsFixed(2)} sent to ${widget.resource.sellerName}!'),
+          content: Text('Offer of ₹${offerPrice?.toStringAsFixed(0)} sent to ${widget.resource.sellerName}!'),
           action: SnackBarAction(
             label: 'Open Chat',
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.chatDetail, arguments: 'conv_001');
+              Navigator.pushNamed(context, AppRoutes.chatDetail, arguments: conversation.id);
             },
           ),
         ),
@@ -123,7 +131,7 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Listed price: \$${widget.resource.price.toStringAsFixed(2)} • ${widget.resource.sellerName}',
+              'Listed price: ${Formatters.formatCurrency(widget.resource.price)} • ${widget.resource.sellerName}',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -131,7 +139,7 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
             const SizedBox(height: 16),
 
             Text(
-              'Your Proposed Price (\$)',
+              'Your Proposed Price (₹)',
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
@@ -139,8 +147,8 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
               controller: _offerPriceController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.attach_money_rounded),
-                hintText: 'Enter offered price',
+                prefixIcon: Icon(Icons.currency_rupee_rounded),
+                hintText: 'Enter offered price in ₹',
               ),
             ),
             const SizedBox(height: 16),
@@ -154,7 +162,7 @@ class _MakeOfferBottomSheetState extends State<MakeOfferBottomSheet> {
               controller: _messageController,
               maxLines: 2,
               decoration: const InputDecoration(
-                hintText: 'e.g. Can pick up at Engineering Quad today at 3 PM!',
+                hintText: 'e.g. Can pick up at MIT CSN Central Library today at 3 PM!',
               ),
             ),
             const SizedBox(height: 24),

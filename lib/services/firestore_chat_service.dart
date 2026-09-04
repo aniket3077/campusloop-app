@@ -26,7 +26,10 @@ class FirestoreChatService implements ChatService {
     if (col == null) return _fallbackService.getConversations();
 
     try {
-      final snapshot = await col.orderBy('lastMessageTime', descending: true).get();
+      final snapshot = await col
+          .orderBy('lastMessageTime', descending: true)
+          .get()
+          .timeout(const Duration(seconds: 3));
       if (snapshot.docs.isEmpty) {
         return await _fallbackService.getConversations();
       }
@@ -52,7 +55,8 @@ class FirestoreChatService implements ChatService {
           .doc(conversationId)
           .collection(FirebaseManager.colMessages)
           .orderBy('timestamp', descending: false)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       if (snapshot.docs.isEmpty) {
         return await _fallbackService.getMessages(conversationId);
@@ -103,13 +107,14 @@ class FirestoreChatService implements ChatService {
           .doc(conversationId)
           .collection(FirebaseManager.colMessages)
           .doc(messageId)
-          .set(msgData);
+          .set(msgData)
+          .timeout(const Duration(seconds: 3));
 
       // Update parent conversation
       await col.doc(conversationId).set({
         'lastMessage': text,
         'lastMessageTime': DateTime.now().toIso8601String(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
 
       return msg;
     } catch (e) {

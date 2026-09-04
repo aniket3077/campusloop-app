@@ -104,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CustomTextField(
                 controller: _fullNameController,
                 label: 'Full Name',
-                hint: 'e.g. Alex Rivera',
+                hint: 'e.g. Aniket Sharma',
                 prefixIcon: Icons.person_outline_rounded,
                 validator: (v) => Validators.validateRequired(v, 'full name'),
               ),
@@ -113,8 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // College Email
               CustomTextField(
                 controller: _emailController,
-                label: 'College Email (.edu)',
-                hint: 'student@university.edu',
+                label: 'College Email (@mit.asia)',
+                hint: 'student@mit.asia',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.validateCollegeEmail,

@@ -86,7 +86,7 @@ class CloudRunAuthApiService implements AuthApiService {
       id: 'usr_101',
       name: email.split('@').first.replaceAll('.', ' '),
       email: email,
-      university: 'Stanford University',
+      university: 'MIT CSN',
       department: 'Computer Science & Engineering',
       academicYear: 'Senior (4th Year)',
       verificationStatus: StudentVerificationStatus.verified,

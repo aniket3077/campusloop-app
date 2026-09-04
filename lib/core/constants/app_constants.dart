@@ -55,14 +55,9 @@ class AppConstants {
     'PHYS 41',
   ];
 
-  // Sample Universities
+  // Single College Configuration: MIT CSN
   static const List<String> universities = [
-    'Stanford University',
-    'Massachusetts Institute of Technology (MIT)',
-    'UC Berkeley',
-    'Harvard University',
-    'UT Austin',
-    'University of Washington',
+    'MIT CSN',
   ];
 
   // Academic Years
@@ -88,12 +83,11 @@ class AppConstants {
     'Architecture & Design',
   ];
 
-  // Sample Pickup Locations
+  // MIT CSN Campus Pickup Safe Hubs
   static const List<String> campusPickupSpots = [
-    'Main Library Student Lounge',
-    'Student Union Center',
-    'Engineering Quad Bench A',
-    'Science & Tech Quad Cafeteria',
-    'Campus North Dining Hall',
+    'MIT CSN Main Gate Security Post',
+    'MIT CSN Central Library Ground Floor',
+    'Computer Science & Engineering Block Atrium',
+    'Campus Cafeteria Student Hub',
   ];
 }

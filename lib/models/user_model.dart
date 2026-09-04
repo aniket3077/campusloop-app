@@ -156,16 +156,16 @@ class UserModel {
 
   static const UserModel mockUser = UserModel(
     id: 'user_101',
-    name: 'Aniket',
-    email: 'aniket@university.edu',
-    university: 'Stanford University',
+    name: 'Aniket Sharma',
+    email: 'aniket@mit.asia',
+    university: 'MIT CSN',
     department: 'Computer Science & Engineering',
-    academicYear: 'Junior (3rd Year)',
+    academicYear: 'Senior (4th Year)',
     verificationStatus: StudentVerificationStatus.verified,
     trustRating: 4.9,
-    totalTransactions: 24,
-    co2SavedKg: 58.2,
-    moneySavedUsd: 420.00,
-    itemsCirculated: 16,
+    totalTransactions: 18,
+    co2SavedKg: 48.5,
+    moneySavedUsd: 410.00,
+    itemsCirculated: 14,
   );
 }

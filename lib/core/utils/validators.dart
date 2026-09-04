@@ -1,11 +1,12 @@
 class Validators {
   static String? validateCollegeEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your university email';
+      return 'Please enter your MIT CSN college email';
     }
-    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+edu$');
-    if (!emailRegExp.hasMatch(value.trim())) {
-      return 'Please use a valid .edu college email address';
+    final email = value.trim().toLowerCase();
+    // Student ID format is strictly @mit.asia domain
+    if (!email.endsWith('@mit.asia')) {
+      return 'Please enter a valid @mit.asia college email';
     }
     return null;
   }

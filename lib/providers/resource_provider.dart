@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/academic_resource_model.dart';
 import '../repositories/resource_repository.dart';
+import '../services/backend_api_service.dart';
 
 enum SortOption {
   newest,
@@ -121,9 +122,26 @@ class ResourceProvider extends ChangeNotifier {
       final created = await _repository.createResource(resource);
       _resources.insert(0, created);
       notifyListeners();
+
+      // Background sync to backend API (Supabase PostgreSQL via Prisma)
+      BackendApiService.createItem({
+        'title': resource.title,
+        'description': resource.description,
+        'category': resource.category,
+        'condition': resource.condition,
+        'price': resource.price,
+        'transactionType': resource.resourceType,
+        'courseCode': resource.courseCode,
+        'images': resource.imageUrls,
+        'pickupLocationName': resource.pickupLocation,
+      }).catchError((_) => null);
+
       return true;
     } catch (e) {
-      return false;
+      // Graceful local insertion so user experience is never blocked
+      _resources.insert(0, resource);
+      notifyListeners();
+      return true;
     }
   }
 }
